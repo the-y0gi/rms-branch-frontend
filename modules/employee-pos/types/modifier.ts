@@ -4,6 +4,7 @@ export interface ModifierOption {
   image?: string;
   price: number;
   isDefault?: boolean;
+  modifierGroups?: ModifierGroup[];
 }
 
 export interface ModifierGroup {
