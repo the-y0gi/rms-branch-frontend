@@ -2,11 +2,10 @@
 
 import React, { useRef } from 'react';
 import { ChevronLeft, ChevronRight, LayoutGrid } from 'lucide-react';
-import { categories } from '../data/categories';
 import { usePosStore } from '../store/pos.store';
 
 export default function CategoryCarousel() {
-  const { selectedCategory, setCategory } = usePosStore();
+  const { selectedCategory, setCategory, categories } = usePosStore();
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const scroll = (dir: 'left' | 'right') => {
@@ -48,7 +47,14 @@ export default function CategoryCarousel() {
                     <LayoutGrid size={20} className={active ? 'text-white' : 'text-brand-primary'} strokeWidth={2} />
                   </div>
                 ) : (
-                  <img src={cat.image} alt={cat.name} className={`w-full h-full object-cover rounded-lg border ${active ? 'border-white/30' : 'border-neutral-100'}`} />
+                  <img 
+                    src={cat.image || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=150&auto=format&fit=crop&q=60'} 
+                    alt={cat.name} 
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=150&auto=format&fit=crop&q=60';
+                    }}
+                    className={`w-full h-full object-cover rounded-lg border ${active ? 'border-white/30' : 'border-neutral-100'}`} 
+                  />
                 )}
               </div>
 

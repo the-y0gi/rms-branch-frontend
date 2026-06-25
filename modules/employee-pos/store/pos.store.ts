@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import toast from 'react-hot-toast';
-import { MenuItem, SelectedModifier, CartItem, CustomerInfo, VehicleInfo, TableInfo, Order } from '../types';
+import axios from 'axios';
+import { MenuItem, SelectedModifier, CartItem, CustomerInfo, VehicleInfo, TableInfo, Order, Category } from '../types';
 
 interface PosState {
   // State
@@ -19,6 +20,9 @@ interface PosState {
   currentOrder: Order | null;
   orders: Order[];
   currentOrderSeq: number;
+  categories: Category[];
+  menuItems: MenuItem[];
+  loadingMenu: boolean;
 
   // Actions
   setCategory: (category: string) => void;
@@ -36,6 +40,7 @@ interface PosState {
   calculateTotals: () => void;
   saveOrder: () => Order | null;
   createOrder: () => Order | null;
+  fetchMenu: () => Promise<void>;
 }
 
 const TAX_RATE = 0.13; // 13% tax
@@ -70,6 +75,9 @@ export const usePosStore = create<PosState>((set, get) => ({
   currentOrder: null,
   orders: [],
   currentOrderSeq: 124, // Starting number matching #TO-000124 example
+  categories: [],
+  menuItems: [],
+  loadingMenu: false,
 
   // Actions
   setCategory: (category) => set({ selectedCategory: category }),
@@ -273,4 +281,32 @@ export const usePosStore = create<PosState>((set, get) => ({
     // Delegate to saveOrder since they perform the same physical state action on frontend
     return get().saveOrder();
   },
+
+  fetchMenu: async () => {
+    set({ loadingMenu: true });
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+      const res = await axios.get(`${apiUrl}/menu/pos-feed`);
+      if (res.data.success) {
+        const allCategory: Category = {
+          id: 'all',
+          name: 'ALL MENUS',
+          image: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=150&auto=format&fit=crop&q=60',
+          sortOrder: 0
+        };
+        set({
+          categories: [allCategory, ...res.data.data.categories],
+          menuItems: res.data.data.menuItems,
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching menu items:', error);
+      // fallback to offline static data to avoid breaking layout
+      const { categories: staticCats } = require('../data/categories');
+      const { menuItems: staticItems } = require('../data/menuItems');
+      set({ categories: staticCats, menuItems: staticItems });
+    } finally {
+      set({ loadingMenu: false });
+    }
+  }
 }));

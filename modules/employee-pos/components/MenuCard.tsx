@@ -44,8 +44,11 @@ export default function MenuCard({ item, onOpenModifiers }: MenuCardProps) {
       {/* Image */}
       <div className="h-[90px] w-full overflow-hidden bg-neutral-100 relative flex-shrink-0">
         <img
-          src={item.image}
+          src={item.image || 'https://images.unsplash.com/photo-1569058242253-92a9c755a0ec?w=150&auto=format&fit=crop&q=60'}
           alt={item.name}
+          onError={(e) => {
+            (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1569058242253-92a9c755a0ec?w=150&auto=format&fit=crop&q=60';
+          }}
           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
         />
         {/* Quick-add overlay */}

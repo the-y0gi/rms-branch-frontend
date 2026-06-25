@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import PosNavbar from '@/modules/employee-pos/components/PosNavbar';
 import CategoryCarousel from '@/modules/employee-pos/components/CategoryCarousel';
 import OrderTypePanel from '@/modules/employee-pos/components/OrderTypePanel';
@@ -8,10 +8,16 @@ import MenuGrid from '@/modules/employee-pos/components/MenuGrid';
 import CartPanel from '@/modules/employee-pos/components/CartPanel';
 import ModifierDrawer from '@/modules/employee-pos/components/ModifierDrawer';
 import { MenuItem } from '@/modules/employee-pos/types';
+import { usePosStore } from '@/modules/employee-pos/store/pos.store';
 
 export default function PosPage() {
   const [activeItem, setActiveItem] = useState<MenuItem | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const { fetchMenu } = usePosStore();
+
+  useEffect(() => {
+    fetchMenu();
+  }, [fetchMenu]);
 
   const handleOpenModifiers = (item: MenuItem) => {
     setActiveItem(item);

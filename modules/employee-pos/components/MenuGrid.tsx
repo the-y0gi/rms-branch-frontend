@@ -1,8 +1,6 @@
 'use client';
 
 import React, { useMemo } from 'react';
-import { menuItems } from '../data/menuItems';
-import { categories } from '../data/categories';
 import { MenuItem } from '../types';
 import { usePosStore } from '../store/pos.store';
 import MenuCard from './MenuCard';
@@ -14,11 +12,11 @@ interface MenuGridProps {
 }
 
 export default function MenuGrid({ onOpenModifiers }: MenuGridProps) {
-  const { search, selectedCategory, sortBy } = usePosStore();
+  const { search, selectedCategory, sortBy, menuItems, categories } = usePosStore();
 
   const catName = useMemo(() => {
     return categories.find((c) => c.id === selectedCategory)?.name ?? 'All Menus';
-  }, [selectedCategory]);
+  }, [selectedCategory, categories]);
 
   const items = useMemo(() => {
     let list = selectedCategory === 'all' ? menuItems : menuItems.filter((i) => i.categoryId === selectedCategory);
@@ -33,7 +31,7 @@ export default function MenuGrid({ onOpenModifiers }: MenuGridProps) {
       if (sortBy === 'price-high') return b.price - a.price;
       return 0;
     });
-  }, [selectedCategory, search, sortBy]);
+  }, [selectedCategory, search, sortBy, menuItems]);
 
   return (
     <div className="flex flex-col h-full">
