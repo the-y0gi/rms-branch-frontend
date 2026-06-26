@@ -7,6 +7,7 @@ import OrderTypePanel from '@/modules/employee-pos/components/OrderTypePanel';
 import MenuGrid from '@/modules/employee-pos/components/MenuGrid';
 import CartPanel from '@/modules/employee-pos/components/CartPanel';
 import ModifierDrawer from '@/modules/employee-pos/components/ModifierDrawer';
+import CheckoutModal from '@/modules/employee-pos/components/CheckoutModal';
 import { MenuItem } from '@/modules/employee-pos/types';
 import { usePosStore } from '@/modules/employee-pos/store/pos.store';
 
@@ -61,6 +62,9 @@ export default function PosPage() {
         isOpen={isDrawerOpen}
         onClose={handleCloseDrawer}
       />
+
+      {/* Checkout Modal Overlay */}
+      <CheckoutModal />
     </main>
   );
 }

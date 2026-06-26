@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { ShoppingBag, Users, Trash2, Plus, ChevronRight, Save, Car, TableProperties } from 'lucide-react';
+import { ShoppingBag, Users, Trash2, Plus, ChevronRight, Car, TableProperties } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { usePosStore } from '../store/pos.store';
 import CartItem from './CartItem';
@@ -9,55 +9,27 @@ import CartItem from './CartItem';
 export default function CartPanel() {
   const {
     cartItems, selectedCustomer, selectedTable, selectedVehicle,
-    subtotal, tax, discount, total, currentOrderSeq,
-    orderType, createOrder, saveOrder, clearCart,
+    subtotal, tax, discount, total,
+    orderType, clearCart, openCheckout,
+    nextOrderNumber,
   } = usePosStore();
 
-  const prefix = { takeout: 'TO', delivery: 'DL', 'drive-through': 'DT', 'dine-in': 'DN' }[orderType] ?? 'TO';
-  const orderNum = `#${prefix}-${String(currentOrderSeq).padStart(6, '0')}`;
+  const orderNum = nextOrderNumber;
 
   const validate = () => {
-    if (!cartItems.length) { 
-      toast.error('Cart is empty.'); 
-      return false; 
-    }
-    if (orderType === 'dine-in' && !selectedTable) { 
-      toast.error('Please assign a table for Dine-In.'); 
-      return false; 
-    }
-    if (orderType === 'drive-through' && !selectedVehicle) { 
-      toast.error('Please record vehicle details for Drive-Through.'); 
-      return false; 
+    if (!cartItems.length) {
+      toast.error('Cart is empty.');
+      return false;
     }
     return true;
   };
 
   const handleCreate = () => {
     if (!validate()) return;
-    const o = createOrder();
-    if (o) {
-      toast.success(
-        <div className="flex flex-col gap-0.5 text-left select-none">
-          <span className="font-bold text-[11px] text-green-900">Order Created!</span>
-          <span className="text-[10px] text-green-800">{o.orderNumber} • {o.orderType.toUpperCase()}</span>
-          <span className="font-semibold text-[10px] text-green-950">Total: ${o.total.toFixed(2)}</span>
-        </div>
-      );
-    }
+    openCheckout();
   };
 
-  const handleSave = () => {
-    if (!validate()) return;
-    const o = saveOrder();
-    if (o) {
-      toast.success(
-        <div className="flex flex-col gap-0.5 text-left select-none">
-          <span className="font-bold text-[11px] text-green-900">Draft Saved!</span>
-          <span className="text-[10px] text-green-800">Order {o.orderNumber} saved to hold.</span>
-        </div>
-      );
-    }
-  };
+
 
   return (
     <div className="bg-white rounded-xl border border-neutral-200 flex flex-col h-full overflow-hidden select-none">
@@ -115,7 +87,7 @@ export default function CartPanel() {
         <div className="space-y-1.5">
           {[
             { label: 'Subtotal',    value: `$${subtotal.toFixed(2)}`,  cls: 'text-neutral-700' },
-            { label: 'Tax (HST 13%)', value: `$${tax.toFixed(2)}`,    cls: 'text-neutral-500' },
+            { label: 'Tax (5%)', value: `$${tax.toFixed(2)}`,    cls: 'text-neutral-500' },
             ...(discount > 0 ? [{ label: 'Discount', value: `-$${discount.toFixed(2)}`, cls: 'text-green-600' }] : []),
           ].map(({ label, value, cls }) => (
             <div key={label} className="flex items-center justify-between">
@@ -142,35 +114,8 @@ export default function CartPanel() {
           >
             Create Order <ChevronRight size={13} strokeWidth={2.5} />
           </button>
-          <button
-            onClick={handleSave}
-            disabled={!cartItems.length}
-            className={`w-full py-2 rounded-xl border text-[10px] font-600 flex items-center justify-center gap-1.5 transition-all active:scale-[0.99] cursor-pointer ${
-              cartItems.length
-                ? 'border-neutral-200 bg-white text-neutral-700 hover:bg-neutral-50 hover:border-neutral-300'
-                : 'border-neutral-100 bg-neutral-50 text-neutral-300 cursor-not-allowed'
-            }`}
-          >
-            <Save size={11} />Save Order
-          </button>
         </div>
 
-        {/* Context warnings */}
-        {/* {!selectedCustomer && orderType !== 'delivery' && (
-          <p className="text-[9px] font-500 text-amber-600 bg-amber-50 border border-amber-100 rounded-lg p-2 text-center">
-            💡 Add customer info for booking (Optional)
-          </p>
-        )} */}
-        {!selectedTable && orderType === 'dine-in' && (
-          <p className="text-[9px] font-500 text-amber-600 bg-amber-50 border border-amber-100 rounded-lg p-2 flex items-center justify-center gap-1">
-            <TableProperties size={10} />Please assign a table for Dine-In.
-          </p>
-        )}
-        {!selectedVehicle && orderType === 'drive-through' && (
-          <p className="text-[9px] font-500 text-amber-600 bg-amber-50 border border-amber-100 rounded-lg p-2 flex items-center justify-center gap-1">
-            <Car size={10} />Record vehicle license and driver name.
-          </p>
-        )}
       </div>
     </div>
   );

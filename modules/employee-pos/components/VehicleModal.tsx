@@ -41,7 +41,7 @@ export default function VehicleModal({ isOpen, onClose }: VehicleModalProps) {
   const inp = "w-full bg-neutral-50 border border-neutral-200 rounded-lg pl-8 pr-3 py-2 text-[11px] font-500 text-neutral-800 placeholder-neutral-400 focus:outline-none focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/15 focus:bg-white transition-all";
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div className="fixed inset-0 z-[200] flex items-center justify-center">
       <div onClick={onClose} className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
       <div className="relative w-[340px] bg-white rounded-2xl shadow-2xl overflow-hidden z-10 animate-scale-up">
         {/* Header */}

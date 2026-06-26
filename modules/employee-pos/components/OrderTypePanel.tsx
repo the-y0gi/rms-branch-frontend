@@ -4,8 +4,6 @@ import React, { useState } from 'react';
 import { UserPlus, Gift, Compass, UserCheck, Car, TableProperties, Radio } from 'lucide-react';
 import { usePosStore } from '../store/pos.store';
 import CustomerModal from './CustomerModal';
-import TableSelectorModal from './TableSelectorModal';
-import VehicleModal from './VehicleModal';
 
 const ORDER_TYPES = [
   { id: 'takeout',      label: 'Takeout'       },
@@ -17,16 +15,12 @@ const ORDER_TYPES = [
 type OT = typeof ORDER_TYPES[number]['id'];
 
 export default function OrderTypePanel() {
-  const { orderType, setOrderType, selectedCustomer, selectedTable, selectedVehicle, cartItems } = usePosStore();
+  const { orderType, setOrderType, selectedCustomer, cartItems } = usePosStore();
   const [showCustomer, setShowCustomer] = useState(false);
-  const [showTable,    setShowTable]    = useState(false);
-  const [showVehicle,  setShowVehicle]  = useState(false);
 
   const handleTypeChange = (t: OT) => {
     setOrderType(t);
     if (t === 'delivery')      setShowCustomer(true);
-    if (t === 'dine-in')       setShowTable(true);
-    if (t === 'drive-through') setShowVehicle(true);
   };
 
   return (
@@ -54,17 +48,27 @@ export default function OrderTypePanel() {
       <div className="grid grid-cols-2 gap-1.5">
         {ORDER_TYPES.map(({ id, label }) => {
           const active = orderType === id;
+          const isDelivery = id === 'delivery';
           return (
             <button
               key={id}
-              onClick={() => handleTypeChange(id)}
-              className={`py-2 px-1 rounded-lg border text-[10px] font-600 text-center tracking-wide transition-all cursor-pointer active:scale-95 ${
-                active
-                  ? 'bg-neutral-900 border-neutral-900 text-white shadow-sm'
-                  : 'bg-white border-neutral-200 text-neutral-600 hover:border-neutral-300 hover:bg-neutral-50'
+              onClick={() => !isDelivery && handleTypeChange(id)}
+              disabled={isDelivery}
+              title={isDelivery ? 'Delivery coming soon' : undefined}
+              className={`py-2 px-1 rounded-lg border text-[10px] font-600 text-center tracking-wide transition-all relative ${
+                isDelivery
+                  ? 'bg-neutral-50 border-neutral-200 text-neutral-300 cursor-not-allowed'
+                  : active
+                  ? 'bg-neutral-900 border-neutral-900 text-white shadow-sm cursor-pointer active:scale-95'
+                  : 'bg-white border-neutral-200 text-neutral-600 hover:border-neutral-300 hover:bg-neutral-50 cursor-pointer active:scale-95'
               }`}
             >
               {label}
+              {isDelivery && (
+                <span className="absolute -top-1.5 -right-1.5 bg-neutral-300 text-white text-[7px] font-700 px-1 py-0.5 rounded-full leading-none">
+                  Soon
+                </span>
+              )}
             </button>
           );
         })}
@@ -108,29 +112,6 @@ export default function OrderTypePanel() {
             </div>
           )}
 
-          {/* Dine-in table preview */}
-          {orderType === 'dine-in' && selectedTable && (
-            <div className="mt-2 p-2 bg-green-50 border border-green-100 rounded-lg space-y-0.5">
-              <div className="flex items-center gap-1 text-green-700">
-                <TableProperties size={10} />
-                <span className="text-[9px] font-700 uppercase">Table Assigned</span>
-              </div>
-              <p className="text-[9.5px] text-green-900 font-700">{selectedTable.name}</p>
-            </div>
-          )}
-
-          {/* Drive-through vehicle preview */}
-          {orderType === 'drive-through' && selectedVehicle && (
-            <div className="mt-2 p-2 bg-amber-50 border border-amber-100 rounded-lg space-y-0.5">
-              <div className="flex items-center gap-1 text-amber-700">
-                <Car size={10} />
-                <span className="text-[9px] font-700 uppercase">Vehicle Recorded</span>
-              </div>
-              <p className="text-[9.5px] text-amber-900 font-700">{selectedVehicle.vehicleNumber}</p>
-              <p className="text-[8.5px] text-neutral-500">{selectedVehicle.customerName} • {selectedVehicle.phone}</p>
-            </div>
-          )}
-
           {/* Customer preview for other order types */}
           {orderType !== 'delivery' && selectedCustomer && (
             <div className="mt-2 p-2 bg-orange-50 border border-orange-100 rounded-lg space-y-0.5">
@@ -164,34 +145,6 @@ export default function OrderTypePanel() {
             </button>
           )}
 
-
-          {orderType === 'dine-in' && (
-            <button
-              onClick={() => setShowTable(true)}
-              className={`w-full py-1.5 px-2.5 rounded-lg border text-[10px] font-600 flex items-center justify-center gap-1.5 transition-all cursor-pointer active:scale-95 ${
-                selectedTable
-                  ? 'bg-green-50 border-green-500 text-green-700 hover:bg-green-100'
-                  : 'bg-white border-neutral-200 text-neutral-700 hover:border-neutral-300 hover:bg-neutral-50'
-              }`}
-            >
-              <TableProperties size={12} />
-              {selectedTable ? 'Change Table' : 'Select Table'}
-            </button>
-          )}
-          {orderType === 'drive-through' && (
-            <button
-              onClick={() => setShowVehicle(true)}
-              className={`w-full py-1.5 px-2.5 rounded-lg border text-[10px] font-600 flex items-center justify-center gap-1.5 transition-all cursor-pointer active:scale-95 ${
-                selectedVehicle
-                  ? 'bg-amber-50 border-amber-500 text-amber-700 hover:bg-amber-100'
-                  : 'bg-white border-neutral-200 text-neutral-700 hover:border-neutral-300 hover:bg-neutral-50'
-              }`}
-            >
-              <Car size={12} />
-              {selectedVehicle ? 'Edit Vehicle' : 'Record Vehicle Info'}
-            </button>
-          )}
-
           {/* Disabled buttons */}
           {[
             { icon: <Compass size={12} />, label: 'Open Items' },
@@ -208,9 +161,7 @@ export default function OrderTypePanel() {
       </div>
 
       {/* Modals */}
-      <CustomerModal     isOpen={showCustomer} onClose={() => setShowCustomer(false)} />
-      <TableSelectorModal isOpen={showTable}    onClose={() => setShowTable(false)}    />
-      <VehicleModal      isOpen={showVehicle}  onClose={() => setShowVehicle(false)}  />
+      <CustomerModal isOpen={showCustomer} onClose={() => setShowCustomer(false)} />
     </div>
   );
 }

@@ -208,9 +208,9 @@ export default function CustomerModal({ isOpen, onClose }: Props) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div className="fixed inset-0 z-[200] flex items-center justify-center">
       {/* Backdrop */}
-      <div onClick={handleClose} className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
 
       {/* Modal Dialog */}
       <div className="relative w-[940px] max-w-[95vw] bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col z-10 border border-neutral-200 animate-scale-up font-sans">
@@ -437,22 +437,22 @@ export default function CustomerModal({ isOpen, onClose }: Props) {
                   {KEYBOARD_ROWS.map((row, rowIdx) => (
                     <div key={rowIdx} className="flex gap-1 justify-center">
                       {row.map((key) => {
-                        let btnClass = "h-9.5 rounded-lg font-700 text-xs transition-all active:scale-95 cursor-pointer shadow-sm flex items-center justify-center bg-white border border-neutral-200 text-neutral-700 hover:bg-neutral-50 ";
+                        let btnClass = "h-11 rounded-lg font-700 text-[13px] transition-all active:scale-95 cursor-pointer shadow-sm flex items-center justify-center bg-white border border-neutral-200 text-neutral-700 hover:bg-neutral-50 ";
                         
                         if (key === 'Backspace') {
-                          btnClass += "w-22 bg-neutral-200 text-neutral-800 hover:bg-neutral-300";
+                          btnClass += "w-24 bg-neutral-200 text-neutral-800 hover:bg-neutral-300";
                         } else if (key === 'Tab') {
-                          btnClass += "w-16 bg-neutral-200 text-neutral-800 hover:bg-neutral-300";
+                          btnClass += "w-18 bg-neutral-200 text-neutral-800 hover:bg-neutral-300";
                         } else if (key === 'Caps Lock') {
-                          btnClass += "w-26 bg-neutral-200 text-neutral-800 hover:bg-neutral-300 " + (capsLock ? "border-brand-primary ring-1 ring-brand-primary" : "");
+                          btnClass += "w-28 bg-neutral-200 text-neutral-800 hover:bg-neutral-300 " + (capsLock ? "border-brand-primary ring-1 ring-brand-primary" : "");
                         } else if (key === 'Enter') {
-                          btnClass += "w-22 bg-brand-primary text-white hover:bg-brand-primary-hover border-none";
+                          btnClass += "w-24 bg-brand-primary text-white hover:bg-brand-primary-hover border-none";
                         } else if (key === 'Shift') {
-                          btnClass += "w-22 bg-neutral-200 text-neutral-800 hover:bg-neutral-300";
+                          btnClass += "w-24 bg-neutral-200 text-neutral-800 hover:bg-neutral-300";
                         } else if (key === 'Space') {
-                          btnClass += "w-[300px] hover:bg-neutral-50";
+                          btnClass += "w-[360px] hover:bg-neutral-50";
                         } else {
-                          btnClass += "w-10.5";
+                          btnClass += "w-12";
                         }
 
                         return (
