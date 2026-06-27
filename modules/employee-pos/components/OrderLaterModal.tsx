@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { X, Calendar, Clock } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 interface OrderLaterModalProps {
   isOpen: boolean;
@@ -9,55 +10,56 @@ interface OrderLaterModalProps {
   onConfirm: (scheduledAt: string) => void;
 }
 
-function getNextDays(count: number) {
-  const days = [];
+const getTodayString = () => {
   const today = new Date();
-  for (let i = 0; i < count; i++) {
-    const d = new Date(today);
-    d.setDate(today.getDate() + i);
-    days.push(d);
+  const yyyy = today.getFullYear();
+  const mm = String(today.getMonth() + 1).padStart(2, '0');
+  const dd = String(today.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
+};
+
+const formatPreviewDate = (dateStr: string) => {
+  if (!dateStr) return '';
+  const [year, month, day] = dateStr.split('-').map(Number);
+  const dateObj = new Date(year, month - 1, day);
+  const todayStr = getTodayString();
+  if (dateStr === todayStr) return 'Today';
+  return dateObj.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+};
+
+const isValidPartialTime = (val: string): boolean => {
+  if (val.length === 0) return true;
+  if (!/^[0-2]/.test(val[0])) return false;
+  if (val.length > 1) {
+    const limit = val[0] === '2' ? /[0-3]/ : /[0-9]/;
+    if (!limit.test(val[1])) return false;
   }
-  return days;
-}
-
-function formatDayLabel(date: Date, index: number) {
-  if (index === 0) return 'Today';
-  return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
-}
-
-function generateTimeSlots() {
-  const slots: string[] = [];
-  for (let h = 9; h <= 23; h++) {
-    for (const m of [0, 30]) {
-      const hour12 = h > 12 ? h - 12 : h === 0 ? 12 : h;
-      const ampm = h >= 12 ? 'PM' : 'AM';
-      const label = `${String(hour12).padStart(2, '0')}:${m === 0 ? '00' : '30'} ${ampm}`;
-      slots.push(label);
-    }
-  }
-  return slots;
-}
-
-const TIME_SLOTS = generateTimeSlots();
+  if (val.length > 2 && val[2] !== ':') return false;
+  if (val.length > 3 && !/[0-5]/.test(val[3])) return false;
+  if (val.length > 4 && !/[0-9]/.test(val[4])) return false;
+  return true;
+};
 
 export default function OrderLaterModal({ isOpen, onClose, onConfirm }: OrderLaterModalProps) {
-  const days = getNextDays(7);
-  const [selectedDayIndex, setSelectedDayIndex] = useState(0);
-  const [selectedTime, setSelectedTime] = useState(TIME_SLOTS[2]); // default 10:00 AM
+  const [selectedDate, setSelectedDate] = useState(getTodayString());
+  const [selectedTime, setSelectedTime] = useState('10:00'); // default 10:00
 
   if (!isOpen) return null;
 
   const handleConfirm = () => {
-    const selectedDay = days[selectedDayIndex];
-    // Parse time
-    const [time, period] = selectedTime.split(' ');
-    const [h, m] = time.split(':').map(Number);
-    let hour = h;
-    if (period === 'PM' && h !== 12) hour = h + 12;
-    if (period === 'AM' && h === 12) hour = 0;
+    if (!selectedDate || !selectedTime) return;
 
-    const scheduled = new Date(selectedDay);
-    scheduled.setHours(hour, m, 0, 0);
+    // Validate 24h format (HH:MM)
+    const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
+    if (!timeRegex.test(selectedTime)) {
+      toast.error('Please enter time in valid 24h format (HH:MM), e.g. 14:30 or 09:15');
+      return;
+    }
+
+    const [year, month, day] = selectedDate.split('-').map(Number);
+    const [hours, minutes] = selectedTime.split(':').map(Number);
+
+    const scheduled = new Date(year, month - 1, day, hours, minutes, 0, 0);
     onConfirm(scheduled.toISOString());
     onClose();
   };
@@ -89,54 +91,44 @@ export default function OrderLaterModal({ isOpen, onClose, onConfirm }: OrderLat
         <div className="p-5 space-y-5">
           <p className="text-[11px] text-neutral-500 text-center font-500">Day & hours of pickup</p>
 
-          {/* Day & Time Row */}
+          {/* Date & Time Row */}
           <div className="grid grid-cols-2 gap-3">
-            {/* Day Selector */}
+            {/* Date Selector */}
             <div>
-              <label className="block text-[10px] font-600 text-neutral-600 mb-1.5 uppercase tracking-wide">
-                <Calendar size={9} className="inline mr-1" />Day
+              <label className="block text-[10px] font-600 text-neutral-600 mb-1.5 uppercase tracking-wide flex items-center gap-1">
+                <Calendar size={10} /> Date
               </label>
-              <div className="relative">
-                <select
-                  value={selectedDayIndex}
-                  onChange={(e) => setSelectedDayIndex(Number(e.target.value))}
-                  className="w-full border border-neutral-200 rounded-lg px-3 py-2 text-[11px] font-500 text-neutral-800 bg-white focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary/20 appearance-none cursor-pointer"
-                >
-                  {days.map((d, i) => (
-                    <option key={i} value={i}>
-                      {formatDayLabel(d, i)}
-                    </option>
-                  ))}
-                </select>
-                <div className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2">
-                  <svg width="10" height="6" viewBox="0 0 10 6" fill="none">
-                    <path d="M1 1L5 5L9 1" stroke="#78716C" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                </div>
-              </div>
+              <input
+                type="date"
+                value={selectedDate}
+                min={getTodayString()}
+                onChange={(e) => setSelectedDate(e.target.value)}
+                className="w-full border border-neutral-200 rounded-lg px-3 py-2 text-[11px] font-500 text-neutral-800 bg-white focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary/20 cursor-pointer"
+              />
             </div>
 
             {/* Time Selector */}
             <div>
-              <label className="block text-[10px] font-600 text-neutral-600 mb-1.5 uppercase tracking-wide">
-                <Clock size={9} className="inline mr-1" />Time
+              <label className="block text-[10px] font-600 text-neutral-600 mb-1.5 uppercase tracking-wide flex items-center gap-1">
+                <Clock size={10} /> Time (HH:MM 24h)
               </label>
-              <div className="relative">
-                <select
-                  value={selectedTime}
-                  onChange={(e) => setSelectedTime(e.target.value)}
-                  className="w-full border border-neutral-200 rounded-lg px-3 py-2 text-[11px] font-500 text-neutral-800 bg-white focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary/20 appearance-none cursor-pointer"
-                >
-                  {TIME_SLOTS.map((slot) => (
-                    <option key={slot} value={slot}>{slot}</option>
-                  ))}
-                </select>
-                <div className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2">
-                  <svg width="10" height="6" viewBox="0 0 10 6" fill="none">
-                    <path d="M1 1L5 5L9 1" stroke="#78716C" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                </div>
-              </div>
+              <input
+                type="text"
+                maxLength={5}
+                placeholder="14:30"
+                value={selectedTime}
+                onChange={(e) => {
+                  let val = e.target.value.replace(/[^0-9]/g, '');
+                  if (val.length > 4) val = val.slice(0, 4);
+                  if (val.length > 2) {
+                    val = val.slice(0, 2) + ':' + val.slice(2);
+                  }
+                  if (isValidPartialTime(val)) {
+                    setSelectedTime(val);
+                  }
+                }}
+                className="w-full border border-neutral-200 rounded-lg px-3 py-2 text-[11px] font-500 text-neutral-800 bg-white focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary/20 cursor-pointer"
+              />
             </div>
           </div>
 
@@ -144,7 +136,7 @@ export default function OrderLaterModal({ isOpen, onClose, onConfirm }: OrderLat
           <div className="bg-orange-50 border border-orange-100 rounded-xl p-3 text-center">
             <p className="text-[10px] text-neutral-500 font-500">Scheduled for</p>
             <p className="text-[13px] font-700 text-brand-primary mt-0.5">
-              {formatDayLabel(days[selectedDayIndex], selectedDayIndex)}, {selectedTime}
+              {formatPreviewDate(selectedDate)}, {selectedTime}
             </p>
             <p className="text-[9px] text-neutral-400 mt-0.5">This order will be prioritized in the queue at the scheduled time</p>
           </div>

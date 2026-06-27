@@ -144,6 +144,7 @@ export default function ModifierDrawer({ item, isOpen, onClose }: Props) {
     if (!valid()) return;
     const mods: SelectedModifier[] = [];
     allActiveGroups.forEach((g) => {
+      const isRoot = item.modifierGroups?.some((rg) => rg.id === g.id) ?? false;
       const opts = selections[g.id] ?? [];
       opts.forEach((o) => {
         mods.push({
@@ -152,6 +153,7 @@ export default function ModifierDrawer({ item, isOpen, onClose }: Props) {
           optionId: o.id,
           optionName: o.name,
           price: o.price,
+          isRoot,
         });
       });
     });

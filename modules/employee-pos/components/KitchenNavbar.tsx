@@ -1,17 +1,20 @@
 'use client';
 
 import React from 'react';
-import { Search, Bell, Settings, ChefHat, ChevronDown, Power, X } from 'lucide-react';
-import { usePosStore } from '../store/pos.store';
+import { ChefHat, ChevronDown, Bell, Settings, Power, LayoutGrid } from 'lucide-react';
 
-export default function PosNavbar() {
-  const { search, setSearch, orders } = usePosStore();
+interface KitchenNavbarProps {
+  activePendingCount: number;
+  activeConfirmedCount: number;
+}
+
+export default function KitchenNavbar({ activePendingCount, activeConfirmedCount }: KitchenNavbarProps) {
   const [selectedBranch, setSelectedBranch] = React.useState('Downtown Main');
+  const badgeCount = activePendingCount + activeConfirmedCount;
 
   return (
     <header className="h-[64px] bg-white border-b border-neutral-200 px-5 flex items-center justify-between sticky top-0 z-40 shadow-sm">
-
-      {/* ── Left: Logo + Branch ── */}
+      {/* ── Left: Logo + Branch + Link ── */}
       <div className="flex items-center gap-5">
         {/* Logo */}
         <div className="flex items-center gap-2.5">
@@ -44,47 +47,31 @@ export default function PosNavbar() {
         {/* Divider */}
         <div className="h-5 w-px bg-neutral-200" />
 
-        {/* Kitchen View Link */}
+        {/* POS Terminal Link */}
         <a
-          href="/employee/kitchen"
+          href="/employee/pos"
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-neutral-200 bg-neutral-50 text-[12px] font-600 text-neutral-700 hover:border-brand-primary/30 hover:bg-brand-primary-light hover:text-brand-primary transition-all cursor-pointer"
         >
-          <ChefHat size={14} className="text-neutral-500 group-hover:text-brand-primary" />
-          <span>Kitchen View</span>
+          <LayoutGrid size={14} className="text-neutral-500" />
+          <span>POS Terminal</span>
         </a>
       </div>
 
-      {/* ── Center: Global Search ── */}
-      <div className="flex-1 max-w-sm mx-6">
-        <div className="relative">
-          <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" />
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search menu items..."
-            className="w-full bg-neutral-50 border border-neutral-200 rounded-lg py-2 pl-9 pr-8 text-[12px] text-neutral-700 placeholder-neutral-400 focus:outline-none focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/15 focus:bg-white transition-all"
-          />
-          {search && (
-            <button
-              onClick={() => setSearch('')}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600 transition-colors"
-            >
-              <X size={13} />
-            </button>
-          )}
-        </div>
+      {/* ── Center: Title ── */}
+      <div className="text-center">
+        <span className="text-[13px] font-800 text-neutral-800 tracking-wider uppercase">
+          Kitchen Dashboard
+        </span>
       </div>
 
       {/* ── Right: Actions + Profile ── */}
       <div className="flex items-center gap-3">
-
         {/* Notification Bell */}
         <button className="relative w-8 h-8 flex items-center justify-center rounded-lg bg-neutral-50 border border-neutral-200 text-neutral-500 hover:text-brand-primary hover:border-brand-primary/30 hover:bg-brand-primary-light transition-all cursor-pointer">
           <Bell size={16} />
-          {orders.length + 2 > 0 && (
+          {badgeCount > 0 && (
             <span className="absolute -top-1 -right-1 min-w-[16px] h-4 bg-brand-primary text-white text-[9px] font-700 rounded-full flex items-center justify-center px-1 border border-white">
-              {orders.length > 0 ? orders.length : 2}
+              {badgeCount}
             </span>
           )}
         </button>

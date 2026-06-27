@@ -1,4 +1,4 @@
-import { CartItem } from './cart';
+import { CartItem } from "./cart";
 
 export interface CustomerInfo {
   name: string;
@@ -17,11 +17,11 @@ export interface VehicleInfo {
 export interface TableInfo {
   id: string;
   name: string;
-  status: 'available' | 'occupied' | 'reserved';
+  status: "available" | "occupied" | "reserved";
 }
 
 export interface SplitPayment {
-  method: 'cash' | 'card' | 'credit' | 'debit';
+  method: "cash" | "card" | "credit" | "debit";
   amount: number;
   personName?: string;
   cashGiven?: number;
@@ -31,15 +31,16 @@ export interface SplitPayment {
 export interface PromoApplied {
   code: string;
   description: string;
-  discountType: 'percentage' | 'flat';
+  discountType: "percentage" | "flat";
   discountValue: number;
   discountAmount: number;
 }
 
 export interface Order {
+  _id?: string;
   orderNumber: string;
-  orderType: 'takeout' | 'delivery' | 'drive-through' | 'dine-in';
-  orderSource: 'pos' | 'online';
+  orderType: "takeout" | "delivery" | "drive-through" | "dine-in";
+  orderSource: "pos" | "online";
   table: TableInfo | null;
   customer: CustomerInfo | null;
   vehicle: VehicleInfo | null;
@@ -48,18 +49,20 @@ export interface Order {
   taxRate: number;
   tax: number;
   discount: number;
-  discountType: 'none' | 'promo' | 'percentage' | 'flat';
+  discountType: "none" | "promo" | "percentage" | "flat";
   promoCode: string;
   total: number;
   // Payment
-  paymentTiming: 'pay-now' | 'pay-later';
-  paymentType: 'one-time' | 'split';
-  paymentStatus: 'paid' | 'unpaid';
+  paymentTiming: "pay-now" | "pay-later";
+  paymentType: "one-time" | "split";
+  paymentStatus: "paid" | "unpaid";
   payments: SplitPayment[];
   // Scheduling
-  orderTiming: 'now' | 'later';
+  orderTiming: "now" | "later";
   scheduledAt: string | null;
+  dueAt?: string | null;
   notes: string;
-  status: 'pending' | 'preparing' | 'ready' | 'completed' | 'cancelled';
+  status: "pending" | "preparing" | "ready" | "completed" | "cancelled";
+  statusHistory?: Array<{ status: string; changedAt: string; note?: string }>;
   createdAt: string;
 }

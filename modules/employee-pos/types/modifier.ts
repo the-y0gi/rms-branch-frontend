@@ -23,4 +23,6 @@ export interface SelectedModifier {
   optionId: string;
   optionName: string;
   price: number;
+  isRoot?: boolean;
 }
+
