@@ -81,137 +81,170 @@ export default function KitchenOrderCard({
       delivery: "Delivery",
     }[order.orderType] || order.orderType;
 
-  // Header background: brand-dark charcoal for placed, dark amber for draft
-  const headerBg = isDraft ? "bg-[#D97706]" : "bg-[#1E1B18]";
+  // Status Colors Mapping
+  const statusColorMap: Record<string, string> = {
+    pending: "bg-brand-primary",
+    preparing: "bg-amber-500",
+    ready: "bg-emerald-500",
+    completed: "bg-neutral-400",
+    cancelled: "bg-red-500",
+  };
+  const statusBarBg = isDraft ? "bg-amber-500" : (statusColorMap[order.status] || "bg-neutral-300");
+
+  const typeBadgeClass =
+    {
+      takeout: "bg-orange-50 text-brand-primary border-orange-100",
+      "drive-through": "bg-purple-50 text-purple-600 border-purple-100",
+      "dine-in": "bg-blue-50 text-blue-600 border-blue-100",
+      delivery: "bg-amber-50 text-amber-700 border-amber-100",
+    }[order.orderType] || "bg-neutral-50 text-neutral-600 border-neutral-100";
+
+  // If order is older than 15 mins, mark as delayed
+  const isDelayed = !isDraft && elapsedMins >= 15 && order.status !== "ready";
 
   return (
     <div
       onClick={onClick}
-      className={`flex flex-col rounded-xl shadow-md border border-neutral-200 overflow-hidden cursor-pointer bg-white hover:shadow-lg transition-all duration-200 select-none ${
+      className={`flex flex-col h-full min-h-0 bg-white rounded-xl border border-neutral-200 overflow-hidden cursor-pointer hover:border-brand-primary/40 hover:shadow-lg transition-all duration-200 select-none ${
         isDraft ? "border-dashed border-amber-400 bg-amber-50/20" : ""
       }`}
     >
+      {/* ── Status Top Accent Border ── */}
+      <div className={`h-1.5 w-full ${statusBarBg}`} />
+
       {/* ── Ticket Header ── */}
-      <div
-        className={`px-4 py-2.5 flex items-center justify-between text-white ${headerBg} font-sans`}
-      >
-        <span className="font-900 text-[13.5px] tracking-wide uppercase">
-          {order.orderNumber}
-        </span>
-        <div className="flex flex-col text-right leading-none gap-0.5">
-          <span className="font-855 text-[11px] uppercase tracking-wider text-brand-primary-muted">
-            {formattedType}
+      <div className="px-4 py-3 border-b border-neutral-100 flex items-center justify-between bg-white">
+        <div className="flex flex-col gap-0.5">
+          <span className="font-800 text-[13px] text-neutral-800 tracking-wide">
+            {order.orderNumber}
           </span>
-          <span className="font-700 text-[10.5px] opacity-90 text-neutral-300">
+          <span className="text-[10px] text-neutral-400 font-500">
             {new Date(order.createdAt).toLocaleTimeString([], {
               hour: "2-digit",
               minute: "2-digit",
             })}
           </span>
         </div>
+        <span className={`px-2 py-0.5 rounded-full border text-[9px] font-700 uppercase tracking-wider ${typeBadgeClass}`}>
+          {formattedType}
+        </span>
       </div>
 
       {/* ── Ticket Body (Items List) ── */}
-      <div className="p-4 flex-1 flex flex-col justify-between gap-4 font-sans min-h-[160px]">
-        <div className="flex flex-col gap-3">
+      <div className="p-4 flex-1 flex flex-col justify-between gap-4 min-h-0">
+        <div className="flex-1 overflow-y-auto pr-1.5 flex flex-col gap-2.5">
           {order.items.map((item, idx) => (
             <div
               key={idx}
-              className="text-[12px] leading-tight pb-2 border-b border-neutral-100 last:border-b-0"
+              className="text-[12px] pb-2 border-b border-neutral-100 last:border-b-0 last:pb-0"
             >
               {/* Item Title & Qty */}
-              <div className="flex justify-between items-start">
-                <span className="text-brand-primary font-800 text-[13px] tracking-tight">
-                  {item.name}
-                </span>
-                <span className="text-neutral-900 font-900 text-[13px] ml-2">
+              <div className="flex items-start gap-2">
+                <span className="w-5.5 h-5.5 flex-shrink-0 rounded-full bg-orange-50 border border-orange-100 text-[10.5px] font-800 text-brand-primary flex items-center justify-center">
                   {item.quantity}
                 </span>
-              </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-neutral-800 font-700 text-[12px] leading-tight">
+                    {item.name}
+                  </p>
 
-              {/* Modifiers */}
-              {item.selectedModifiers && item.selectedModifiers.length > 0 && (
-                <div className="pl-2 mt-1 flex flex-col gap-0.5 border-l border-neutral-200">
-                  {getGroupedModifiers(item.selectedModifiers).map(
-                    (mod, modIdx) => (
-                      <div
-                        key={modIdx}
-                        className="flex flex-col text-[11px] leading-tight"
-                      >
-                        {mod.isRoot ? (
-                          <>
-                            <span className="text-neutral-500 font-800 text-[9.5px] uppercase tracking-wider mt-1 select-none">
-                              {mod.groupName}
-                            </span>
-                            <div className="flex justify-between items-baseline text-neutral-800 font-650 pl-0.5">
-                              <span>{mod.optionName}</span>
-                              {mod.quantity > 1 && (
-                                <span className="font-800 text-neutral-900 ml-1">
-                                  {mod.quantity}
+                  {/* Modifiers */}
+                  {item.selectedModifiers && item.selectedModifiers.length > 0 && (
+                    <div className="pl-2.5 mt-1 border-l-2 border-neutral-200 flex flex-col gap-0.5">
+                      {getGroupedModifiers(item.selectedModifiers).map(
+                        (mod, modIdx) => (
+                          <div
+                            key={modIdx}
+                            className="text-[10.5px] leading-tight text-neutral-600"
+                          >
+                            {mod.isRoot ? (
+                              <div className="mt-1">
+                                <span className="text-[9px] font-800 text-neutral-400 uppercase tracking-wider">
+                                  {mod.groupName}
                                 </span>
-                              )}
-                            </div>
-                          </>
-                        ) : (
-                          <div className="flex justify-between items-baseline text-neutral-500 font-550 pl-3 italic">
-                            <span>{mod.optionName}</span>
-                            {mod.quantity > 1 && (
-                              <span className="font-700 text-neutral-600 ml-1">
-                                {mod.quantity}
-                              </span>
+                                <div className="flex justify-between items-baseline font-600 text-neutral-700">
+                                  <span>{mod.optionName}</span>
+                                  {mod.quantity > 1 && (
+                                    <span className="font-700 text-neutral-900 text-[9.5px]">
+                                      x{mod.quantity}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="flex justify-between items-baseline text-neutral-500 font-500 italic pl-1.5">
+                                <span>{mod.optionName}</span>
+                                {mod.quantity > 1 && (
+                                  <span className="font-600 text-neutral-600 text-[9px]">
+                                    x{mod.quantity}
+                                  </span>
+                                )}
+                              </div>
                             )}
                           </div>
-                        )}
-                      </div>
-                    ),
+                        ),
+                      )}
+                    </div>
+                  )}
+
+                  {/* Custom Note */}
+                  {item.note && (
+                    <p className="text-[9.5px] text-amber-800 font-600 italic mt-1.5 bg-amber-50/80 px-2 py-0.5 rounded border border-amber-200/50">
+                      Note: {item.note}
+                    </p>
                   )}
                 </div>
-              )}
-
-              {/* Custom Note */}
-              {item.note && (
-                <p className="text-[10px] text-amber-700 font-650 italic mt-1 bg-amber-50 px-2 py-0.5 rounded border border-amber-200/50">
-                  Note: {item.note}
-                </p>
-              )}
+              </div>
             </div>
           ))}
         </div>
       </div>
 
-      {/* ── Ticket Jagged Tear Separator ── */}
-      <div className="relative h-1 bg-transparent border-t border-dashed border-neutral-250 mx-4" />
-
       {/* ── Ticket Footer ── */}
-      <div className="px-4 py-3 bg-neutral-50 flex flex-col gap-1 text-[11.5px] font-sans select-none border-t border-neutral-100">
-        {/* Row 1: Status & Price */}
+      <div className="px-4 py-3 bg-neutral-50/50 border-t border-neutral-100 flex flex-col gap-2 text-[11px]">
+        {/* Row 1: Status Badge & Price */}
         <div className="flex justify-between items-center">
-          <span className="text-[#1E40AF] font-800 uppercase tracking-wide">
-            {isDraft
-              ? "POS Drafting"
-              : order.status === "pending"
-                ? "Order Confirmed"
-                : order.status === "preparing"
-                  ? "In Preparing"
-                  : order.orderType === "delivery"
-                    ? "Ready For Delivery"
-                    : "Ready For Pickup"}
-          </span>
-          <span className="font-900 text-[#16A34A] text-[13.5px]">
+          {isDraft ? (
+            <span className="px-2 py-0.5 rounded-full border border-amber-250 bg-amber-50 text-amber-700 text-[9px] font-700 uppercase tracking-wide">
+              POS Drafting
+            </span>
+          ) : order.status === "pending" ? (
+            <span className="px-2 py-0.5 rounded-full border border-orange-200 bg-orange-50 text-brand-primary text-[9px] font-700 uppercase tracking-wide animate-pulse">
+              Confirmed
+            </span>
+          ) : order.status === "preparing" ? (
+            <span className="px-2 py-0.5 rounded-full border border-blue-200 bg-blue-50 text-blue-600 text-[9px] font-700 uppercase tracking-wide">
+              Preparing
+            </span>
+          ) : (
+            <span className="px-2 py-0.5 rounded-full border border-emerald-250 bg-emerald-50 text-emerald-700 text-[9px] font-700 uppercase tracking-wide">
+              {order.orderType === "delivery" ? "Ready Delv" : "Ready Pick"}
+            </span>
+          )}
+          <span className="font-800 text-neutral-800 text-[13px]">
             ${order.total.toFixed(2)}
           </span>
         </div>
-        {/* Row 2: Payment & Elapsed Time */}
-        <div className="flex justify-between items-center text-[10.5px]">
-          <span
-            className={`font-900 uppercase tracking-wider ${isUnpaid ? "text-[#DC2626]" : "text-[#16A34A]"}`}
-          >
-            {isUnpaid ? "Unpaid" : "Paid"}
-          </span>
-          {!isDraft && (
-            <span className="text-neutral-450 font-800">
-              {elapsedMins} Min{elapsedMins !== 1 ? "s" : ""}
+
+        {/* Row 2: Payment & Timer */}
+        <div className="flex justify-between items-center">
+          {isUnpaid ? (
+            <span className="px-1.5 py-0.5 rounded bg-red-50 border border-red-200 text-red-600 text-[8.5px] font-700 uppercase tracking-wide">
+              Unpaid
             </span>
+          ) : (
+            <span className="px-1.5 py-0.5 rounded bg-emerald-50 border border-emerald-200 text-emerald-600 text-[8.5px] font-700 uppercase tracking-wide">
+              Paid
+            </span>
+          )}
+
+          {!isDraft && (
+            <div className={`flex items-center gap-1 text-[10px] font-600 ${isDelayed ? "text-red-600 font-700 animate-pulse" : "text-neutral-400"}`}>
+              <Clock size={11} className={isDelayed ? "animate-bounce" : ""} />
+              <span>
+                {elapsedMins} Min{elapsedMins !== 1 ? "s" : ""}
+              </span>
+            </div>
           )}
         </div>
       </div>

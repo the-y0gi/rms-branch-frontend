@@ -95,13 +95,15 @@ export default function KitchenDashboard() {
   const countConfirmed = orders.filter((o) => o.status === 'pending').length;
   const countPreparing = orders.filter((o) => o.status === 'preparing').length;
   const countReady = orders.filter((o) => o.status === 'ready').length;
-  const countAll = countPending + countConfirmed + countPreparing + countReady;
+  
+  // countAll should only include placed orders (confirmed, preparing, ready). Exclude pending draftCart.
+  const countAll = countConfirmed + countPreparing + countReady;
 
-  // Totals for Order Types
-  const countTakeout = orders.filter((o) => o.orderType === 'takeout').length + (draftCart?.orderType === 'takeout' ? 1 : 0);
-  const countDriveThrough = orders.filter((o) => o.orderType === 'drive-through').length + (draftCart?.orderType === 'drive-through' ? 1 : 0);
-  const countDineIn = orders.filter((o) => o.orderType === 'dine-in').length + (draftCart?.orderType === 'dine-in' ? 1 : 0);
-  const countDelivery = orders.filter((o) => o.orderType === 'delivery').length + (draftCart?.orderType === 'delivery' ? 1 : 0);
+  // Totals for Order Types (Only count active DB orders, exclude pending draftCart)
+  const countTakeout = orders.filter((o) => o.orderType === 'takeout').length;
+  const countDriveThrough = orders.filter((o) => o.orderType === 'drive-through').length;
+  const countDineIn = orders.filter((o) => o.orderType === 'dine-in').length;
+  const countDelivery = orders.filter((o) => o.orderType === 'delivery').length;
 
   // Reset startIndex on filter change
   useEffect(() => {
@@ -112,10 +114,9 @@ export default function KitchenDashboard() {
   const filteredOrders = React.useMemo(() => {
     const candidates: Order[] = [];
 
-    // Draft cart candidate
+    // Draft cart candidate (ONLY show in pending filter per request)
     if (draftCart) {
-      const mapped = getMappedStatus(draftCart);
-      const matchesStatus = statusFilter === 'all' || statusFilter === mapped;
+      const matchesStatus = statusFilter === 'pending';
       const matchesType = typeFilter === 'all' || typeFilter === draftCart.orderType;
       if (matchesStatus && matchesType) {
         candidates.push(draftCart);
@@ -140,127 +141,71 @@ export default function KitchenDashboard() {
 
   return (
     <div className="h-screen flex flex-col overflow-hidden bg-brand-bg text-neutral-900 font-sans">
-      {/* Navbar (dark charcoal theme) */}
+      {/* Navbar */}
       <KitchenNavbar activePendingCount={activeDraftCount} activeConfirmedCount={countConfirmed} />
 
-      {/* ── Filter Controls Section (Orange/Charcoal Premium Palette) ── */}
-      <div className="bg-white border-b border-neutral-200 px-6 py-4 flex flex-col gap-3 shadow-sm">
+      {/* ── Filter Controls Section (Premium Low-Profile Segmented Controls) ── */}
+      <div className="bg-white border-b border-neutral-200 px-6 py-3 flex flex-col md:flex-row md:items-center md:justify-between gap-3 shadow-xs flex-shrink-0 select-none">
         
-        {/* Row 1: Status Filters */}
+        {/* Status Pills */}
         <div className="flex flex-wrap gap-2 items-center">
-          <button
-            onClick={() => setStatusFilter('all')}
-            className={`px-4 py-1.5 rounded-full text-[11.5px] font-800 tracking-wide uppercase transition-all cursor-pointer border ${
-              statusFilter === 'all'
-                ? 'bg-brand-primary border-brand-primary text-white shadow-sm shadow-brand-primary/15'
-                : 'bg-white border-neutral-200 text-neutral-600 hover:border-brand-primary hover:text-brand-primary hover:bg-brand-primary-light/40'
-            }`}
-          >
-            All ({countAll})
-          </button>
-          <button
-            onClick={() => setStatusFilter('pending')}
-            className={`px-4 py-1.5 rounded-full text-[11.5px] font-800 tracking-wide uppercase transition-all cursor-pointer border ${
-              statusFilter === 'pending'
-                ? 'bg-brand-primary border-brand-primary text-white shadow-sm shadow-brand-primary/15'
-                : 'bg-white border-neutral-200 text-neutral-600 hover:border-brand-primary hover:text-brand-primary hover:bg-brand-primary-light/40'
-            }`}
-          >
-            Pending ({countPending})
-          </button>
-          <button
-            onClick={() => setStatusFilter('confirmed')}
-            className={`px-4 py-1.5 rounded-full text-[11.5px] font-800 tracking-wide uppercase transition-all cursor-pointer border ${
-              statusFilter === 'confirmed'
-                ? 'bg-brand-primary border-brand-primary text-white shadow-sm shadow-brand-primary/15'
-                : 'bg-white border-neutral-200 text-neutral-600 hover:border-brand-primary hover:text-brand-primary hover:bg-brand-primary-light/40'
-            }`}
-          >
-            Order Confirmed ({countConfirmed})
-          </button>
-          <button
-            onClick={() => setStatusFilter('preparing')}
-            className={`px-4 py-1.5 rounded-full text-[11.5px] font-800 tracking-wide uppercase transition-all cursor-pointer border ${
-              statusFilter === 'preparing'
-                ? 'bg-brand-primary border-brand-primary text-white shadow-sm shadow-brand-primary/15'
-                : 'bg-white border-neutral-200 text-neutral-600 hover:border-brand-primary hover:text-brand-primary hover:bg-brand-primary-light/40'
-            }`}
-          >
-            In Preparing ({countPreparing})
-          </button>
-          <button
-            onClick={() => setStatusFilter('ready')}
-            className={`px-4 py-1.5 rounded-full text-[11.5px] font-800 tracking-wide uppercase transition-all cursor-pointer border ${
-              statusFilter === 'ready'
-                ? 'bg-brand-primary border-brand-primary text-white shadow-sm shadow-brand-primary/15'
-                : 'bg-white border-neutral-200 text-neutral-600 hover:border-brand-primary hover:text-brand-primary hover:bg-brand-primary-light/40'
-            }`}
-          >
-            Ready For Pickup ({countReady})
-          </button>
+          {[
+            { id: "all", label: "All", count: countAll },
+            { id: "pending", label: "Pending", count: countPending },
+            { id: "confirmed", label: "Confirmed", count: countConfirmed },
+            { id: "preparing", label: "Preparing", count: countPreparing },
+            { id: "ready", label: "Ready", count: countReady },
+          ].map((statusTab) => {
+            const active = statusFilter === statusTab.id;
+            return (
+              <button
+                key={statusTab.id}
+                onClick={() => setStatusFilter(statusTab.id as any)}
+                className={`px-3.5 py-1.5 rounded-full text-[11px] font-750 tracking-wide uppercase transition-all duration-150 cursor-pointer border ${
+                  active
+                    ? "bg-brand-primary border-brand-primary text-white shadow-sm shadow-brand-primary/15"
+                    : "bg-neutral-50 border-neutral-200 text-neutral-600 hover:border-brand-primary/30 hover:text-brand-primary hover:bg-orange-50/50"
+                }`}
+              >
+                {statusTab.label} ({statusTab.count})
+              </button>
+            );
+          })}
         </div>
 
-        {/* Row 2 & 3: Order Type Filters + Categories */}
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          
-          <div className="flex items-center gap-4">
-            {/* Order Types */}
-            <div className="flex items-center gap-1.5 bg-neutral-100 p-1 rounded-full border border-neutral-200">
+        {/* Order Types Segment Bar */}
+        <div className="flex items-center gap-1 bg-neutral-50 p-1 rounded-xl border border-neutral-200">
+          {[
+            { id: "all", label: "All Types", count: countAll },
+            { id: "takeout", label: "Takeout", count: countTakeout },
+            { id: "drive-through", label: "Drive Thru", count: countDriveThrough },
+            { id: "dine-in", label: "Dine In", count: countDineIn },
+            { id: "delivery", label: "Delivery", count: countDelivery },
+          ].map((typeTab) => {
+            const active = typeFilter === typeTab.id;
+            return (
               <button
-                onClick={() => setTypeFilter('all')}
-                className={`px-3.5 py-1 rounded-full text-[11px] font-800 tracking-wide uppercase transition-all cursor-pointer ${
-                  typeFilter === 'all' ? 'bg-brand-primary text-white shadow-xs' : 'text-neutral-600 hover:text-brand-primary'
+                key={typeTab.id}
+                onClick={() => setTypeFilter(typeTab.id as any)}
+                className={`px-3 py-1 rounded-lg text-[10px] font-700 tracking-wide uppercase transition-all duration-150 cursor-pointer ${
+                  active
+                    ? "bg-brand-primary text-white shadow-xs"
+                    : "text-neutral-550 hover:text-brand-primary"
                 }`}
               >
-                All ({countAll})
+                {typeTab.label} ({typeTab.count})
               </button>
-              <button
-                onClick={() => setTypeFilter('takeout')}
-                className={`px-3.5 py-1 rounded-full text-[11px] font-800 tracking-wide uppercase transition-all cursor-pointer ${
-                  typeFilter === 'takeout' ? 'bg-brand-primary text-white shadow-xs' : 'text-neutral-600 hover:text-brand-primary'
-                }`}
-              >
-                Take Out ({countTakeout})
-              </button>
-              <button
-                onClick={() => setTypeFilter('drive-through')}
-                className={`px-3.5 py-1 rounded-full text-[11px] font-800 tracking-wide uppercase transition-all cursor-pointer ${
-                  typeFilter === 'drive-through' ? 'bg-brand-primary text-white shadow-xs' : 'text-neutral-600 hover:text-brand-primary'
-                }`}
-              >
-                Drive Through ({countDriveThrough})
-              </button>
-              <button
-                onClick={() => setTypeFilter('dine-in')}
-                className={`px-3.5 py-1 rounded-full text-[11px] font-800 tracking-wide uppercase transition-all cursor-pointer ${
-                  typeFilter === 'dine-in' ? 'bg-brand-primary text-white shadow-xs' : 'text-neutral-600 hover:text-brand-primary'
-                }`}
-              >
-                Dine In ({countDineIn})
-              </button>
-              <button
-                onClick={() => setTypeFilter('delivery')}
-                className={`px-3.5 py-1 rounded-full text-[11px] font-800 tracking-wide uppercase transition-all cursor-pointer ${
-                  typeFilter === 'delivery' ? 'bg-brand-primary text-white shadow-xs' : 'text-neutral-600 hover:text-brand-primary'
-                }`}
-              >
-                Delivery ({countDelivery})
-              </button>
-            </div>
-
-       
-          </div>
-
-
+            );
+          })}
         </div>
       </div>
 
-      {/* ── Main Dashboard Cards Row with pagination arrows ── */}
-      <div className="flex-1 p-6 flex items-center justify-center gap-4 min-h-0">
+      {/* ── Main Dashboard Cards Row with pagination arrows (height constrained to fill screen) ── */}
+      <div className="flex-1 p-6 flex items-stretch justify-center gap-4 min-h-0 bg-brand-bg select-none">
         {loading ? (
-          <div className="flex-1 flex flex-col items-center justify-center text-neutral-500 font-800">
-            <span className="animate-spin text-2xl mb-2">⏳</span>
-            Loading kitchen queue...
+          <div className="h-full flex flex-col items-center justify-center text-neutral-400 font-700 text-[12px] gap-2">
+            <span className="animate-spin text-xl">⏳</span>
+            <span>Loading active queue...</span>
           </div>
         ) : (
           <>
@@ -268,22 +213,22 @@ export default function KitchenDashboard() {
             {startIndex > 0 ? (
               <button
                 onClick={() => setStartIndex((prev) => Math.max(0, prev - 1))}
-                className="w-12 h-12 flex-shrink-0 bg-white hover:bg-neutral-50 text-neutral-700 hover:text-brand-primary border border-neutral-200 rounded-full flex items-center justify-center shadow-md transition-all cursor-pointer hover:scale-105 active:scale-95"
+                className="self-center w-12 h-12 flex-shrink-0 bg-white hover:bg-neutral-50 text-neutral-700 hover:text-brand-primary border border-neutral-200 rounded-full flex items-center justify-center shadow-md transition-all cursor-pointer hover:scale-105 active:scale-95"
                 title="Previous orders"
               >
                 <ChevronLeft size={24} className="stroke-[3]" />
               </button>
             ) : (
               // Invisible spacer of the same size to keep the cards centered when left button is absent
-              <div className="w-12 h-12 flex-shrink-0" />
+              <div className="self-center w-12 h-12 flex-shrink-0" />
             )}
 
             {/* Grid of 4 Cards */}
-            <div className="flex-1 h-full grid grid-cols-4 gap-6 items-stretch justify-start">
+            <div className="flex-1 h-full grid grid-cols-4 gap-6 items-stretch justify-start min-h-0">
               {visibleOrders.map((order) => (
                 <div
                   key={order._id || order.orderNumber}
-                  className="h-full flex flex-col bg-white rounded-xl shadow-md border border-neutral-250 overflow-hidden"
+                  className="h-full flex flex-col min-h-0"
                 >
                   <KitchenOrderCard
                     order={order}
@@ -304,11 +249,11 @@ export default function KitchenDashboard() {
 
               {/* If no orders matching filters */}
               {filteredOrders.length === 0 && (
-                <div className="col-span-4 flex-1 flex flex-col h-full bg-white/70 rounded-xl border-2 border-dashed border-neutral-350 p-6 items-center justify-center text-center text-neutral-400">
+                <div className="col-span-4 flex-1 flex flex-col h-full bg-white/70 rounded-xl border-2 border-dashed border-neutral-300 p-6 items-center justify-center text-center text-neutral-400">
                   <div className="w-12 h-12 bg-orange-50 rounded-full flex items-center justify-center mb-3">
-                    🍽️
+                    🍳
                   </div>
-                  <p className="text-[13px] font-800 text-neutral-700 uppercase tracking-wide">Queue Clear</p>
+                  <p className="text-[13px] font-800 text-neutral-850 uppercase tracking-wide">Queue Clear</p>
                   <p className="text-[11px] text-neutral-400 mt-1 max-w-[200px]">
                     No active orders matching filters.
                   </p>
@@ -320,14 +265,14 @@ export default function KitchenDashboard() {
             {startIndex + 4 < filteredOrders.length ? (
               <button
                 onClick={() => setStartIndex((prev) => Math.min(filteredOrders.length - 4, prev + 1))}
-                className="w-12 h-12 flex-shrink-0 bg-white hover:bg-neutral-50 text-neutral-700 hover:text-brand-primary border border-neutral-200 rounded-full flex items-center justify-center shadow-md transition-all cursor-pointer hover:scale-105 active:scale-95"
+                className="self-center w-12 h-12 flex-shrink-0 bg-white hover:bg-neutral-50 text-neutral-700 hover:text-brand-primary border border-neutral-200 rounded-full flex items-center justify-center shadow-md transition-all cursor-pointer hover:scale-105 active:scale-95"
                 title="More orders"
               >
                 <ChevronRight size={24} className="stroke-[3]" />
               </button>
             ) : (
               // Invisible spacer of the same size to keep the cards centered when right button is absent
-              <div className="w-12 h-12 flex-shrink-0" />
+              <div className="self-center w-12 h-12 flex-shrink-0" />
             )}
           </>
         )}
