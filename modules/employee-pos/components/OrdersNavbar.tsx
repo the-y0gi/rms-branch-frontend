@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Bell, Settings, ChefHat, ChevronDown, Power, LayoutGrid, Receipt } from 'lucide-react';
+import { Bell, Settings, ChefHat, ChevronDown, Power, LayoutGrid, ClipboardList } from 'lucide-react';
 
 export default function OrdersNavbar() {
   const [selectedBranch, setSelectedBranch] = React.useState('Downtown Main');
@@ -65,7 +65,7 @@ export default function OrdersNavbar() {
           href="/employee/orders"
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-brand-primary/30 bg-brand-primary-light text-[12px] font-700 text-brand-primary transition-all cursor-pointer"
         >
-          <Receipt size={14} className="text-brand-primary" />
+          <ClipboardList size={14} className="text-brand-primary" />
           <span>Orders</span>
         </a>
       </div>
@@ -96,11 +96,11 @@ export default function OrdersNavbar() {
         {/* Employee Profile */}
         <div className="flex items-center gap-2.5">
           <div className="text-right">
-            <p className="text-[12px] font-700 text-neutral-800 leading-tight">Hi, Nikit</p>
+            <p className="text-[12px] font-700 text-neutral-800 leading-tight">Hi, Jone</p>
             <span className="text-[10px] font-600 text-brand-primary leading-tight uppercase tracking-wide">Manager</span>
           </div>
           <div className="w-8 h-8 rounded-lg bg-brand-primary flex items-center justify-center text-[11px] font-800 text-white shadow-sm border border-brand-primary-hover/30">
-            NK
+            JO
           </div>
         </div>
 

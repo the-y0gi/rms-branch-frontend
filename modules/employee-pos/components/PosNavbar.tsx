@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Search, Bell, Settings, ChefHat, ChevronDown, Power, X, Receipt } from 'lucide-react';
+import { Search, Bell, Settings, ChefHat, ChevronDown, Power, X, ClipboardList, LayoutGrid } from 'lucide-react';
 import { usePosStore } from '../store/pos.store';
 
 export default function PosNavbar() {
@@ -44,6 +44,15 @@ export default function PosNavbar() {
         {/* Divider */}
         <div className="h-5 w-px bg-neutral-200" />
 
+        {/* POS Terminal Link (Active) */}
+        <a
+          href="/employee/pos"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-brand-primary/30 bg-brand-primary-light text-[12px] font-700 text-brand-primary transition-all cursor-pointer"
+        >
+          <LayoutGrid size={14} className="text-brand-primary" />
+          <span>POS Terminal</span>
+        </a>
+
         {/* Kitchen View Link */}
         <a
           href="/employee/kitchen"
@@ -58,7 +67,7 @@ export default function PosNavbar() {
           href="/employee/orders"
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-neutral-200 bg-neutral-50 text-[12px] font-600 text-neutral-700 hover:border-brand-primary/30 hover:bg-brand-primary-light hover:text-brand-primary transition-all cursor-pointer"
         >
-          <Receipt size={14} className="text-neutral-500 group-hover:text-brand-primary" />
+          <ClipboardList size={14} className="text-neutral-500 group-hover:text-brand-primary" />
           <span>Orders</span>
         </a>
       </div>

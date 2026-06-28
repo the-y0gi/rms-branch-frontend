@@ -525,7 +525,7 @@ export default function OrderDetailModal({ order, onClose, onRefresh }: OrderDet
                           {formatDate(hist.changedAt)}
                         </td>
                         <td className="px-4 py-2 text-neutral-750 font-600">
-                          Nikit Patel
+                          Jone
                         </td>
                       </tr>
                     ))
@@ -537,7 +537,7 @@ export default function OrderDetailModal({ order, onClose, onRefresh }: OrderDet
                         <td className="px-4 py-2 text-brand-primary font-700">Order Created</td>
                         <td className="px-4 py-2 text-neutral-450 italic">New order placed</td>
                         <td className="px-4 py-2 text-neutral-500">{formatDate(order.createdAt)}</td>
-                        <td className="px-4 py-2 text-neutral-750 font-600">Nikit Patel</td>
+                        <td className="px-4 py-2 text-neutral-750 font-600">Jone</td>
                       </tr>
                       {order.paymentStatus === 'paid' && (
                         <tr className="hover:bg-neutral-50/30">
@@ -545,7 +545,7 @@ export default function OrderDetailModal({ order, onClose, onRefresh }: OrderDet
                           <td className="px-4 py-2 text-brand-primary font-700">Payment Processed</td>
                           <td className="px-4 py-2 text-neutral-450 italic">Marked paid</td>
                           <td className="px-4 py-2 text-neutral-500">{formatDate(order.createdAt)}</td>
-                          <td className="px-4 py-2 text-neutral-750 font-600">Nikit Patel</td>
+                          <td className="px-4 py-2 text-neutral-750 font-600">Jone</td>
                         </tr>
                       )}
                     </>
