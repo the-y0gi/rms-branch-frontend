@@ -735,7 +735,7 @@ export const usePosStore = create<PosState>((set, get) => ({
           "drive-through": "DT",
           "dine-in": "DN",
         }[get().orderType] ?? "TO";
-      set({ nextOrderNumber: `#${prefix}-${todayStr}-001` });
+      set({ nextOrderNumber: `${prefix}-101` });
     }
   },
 }));
