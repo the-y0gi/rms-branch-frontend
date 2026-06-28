@@ -595,7 +595,7 @@ export default function KitchenDetailModal({
   };
 
   const getSubtotal = () => {
-    return localOrder.items.reduce((sum, item) => sum + item.totalPrice, 0);
+    return localOrder.items.reduce((sum, item) => sum + ((item.totalPrice as number | undefined) ?? (item.basePrice * item.quantity)), 0);
   };
 
   return (
@@ -930,7 +930,7 @@ export default function KitchenDetailModal({
                             </div>
 
                             <div className="w-24 text-right font-700 text-[12.5px] text-neutral-800 font-mono">
-                              ${item.totalPrice.toFixed(2)}
+                              ${((item.totalPrice as number | undefined) ?? (item.basePrice * item.quantity)).toFixed(2)}
                             </div>
                           </div>
                         </div>
@@ -963,7 +963,7 @@ export default function KitchenDetailModal({
                   <div className="flex justify-between">
                     <span>Discount:</span>
                     <span className="text-[#DC2626] font-mono">
-                      -${localOrder.discount.toFixed(2)}
+                      -${((localOrder.discount as number | undefined) ?? 0).toFixed(2)}
                     </span>
                   </div>
                   <div className="flex justify-between border-t border-dashed border-neutral-200 pt-2 text-neutral-800">
@@ -972,7 +972,7 @@ export default function KitchenDetailModal({
                       $
                       {(isEditing
                         ? getEditTotals().subtotal
-                        : localOrder.subtotal
+                        : ((localOrder.subtotal as number | undefined) ?? 0)
                       ).toFixed(2)}
                     </span>
                   </div>
@@ -982,7 +982,7 @@ export default function KitchenDetailModal({
                       $
                       {(isEditing
                         ? getEditTotals().tax
-                        : localOrder.tax
+                        : ((localOrder.tax as number | undefined) ?? 0)
                       ).toFixed(2)}
                     </span>
                   </div>
@@ -992,7 +992,7 @@ export default function KitchenDetailModal({
                       $
                       {(isEditing
                         ? getEditTotals().tax
-                        : localOrder.tax
+                        : ((localOrder.tax as number | undefined) ?? 0)
                       ).toFixed(2)}
                     </span>
                   </div>
@@ -1002,7 +1002,7 @@ export default function KitchenDetailModal({
                       $
                       {(isEditing
                         ? getEditTotals().total
-                        : localOrder.total
+                        : ((localOrder.total as number | undefined) ?? 0)
                       ).toFixed(2)}
                     </span>
                   </div>
@@ -1012,7 +1012,7 @@ export default function KitchenDetailModal({
                       $
                       {Math.max(
                         0,
-                        (isEditing ? getEditTotals().total : localOrder.total) -
+                        (isEditing ? getEditTotals().total : ((localOrder.total as number | undefined) ?? 0)) -
                           paymentsTotal,
                        ).toFixed(2)}
                     </span>
@@ -1099,7 +1099,7 @@ export default function KitchenDetailModal({
                       <div className="flex justify-between py-1 border-b border-neutral-50 last:border-b-0">
                         <span className="text-neutral-450 font-500">Discount Amount:</span>
                         <span className="text-[#DC2626] font-750">
-                          -${localOrder.discount.toFixed(2)}
+                          -${((localOrder.discount as number | undefined) ?? 0).toFixed(2)}
                         </span>
                       </div>
                     </>

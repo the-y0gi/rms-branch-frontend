@@ -1,15 +1,13 @@
 'use client';
 
 import React from 'react';
-import { Search, Bell, Settings, ChefHat, ChevronDown, Power, X, Receipt } from 'lucide-react';
-import { usePosStore } from '../store/pos.store';
+import { Bell, Settings, ChefHat, ChevronDown, Power, LayoutGrid, Receipt } from 'lucide-react';
 
-export default function PosNavbar() {
-  const { search, setSearch, orders } = usePosStore();
+export default function OrdersNavbar() {
   const [selectedBranch, setSelectedBranch] = React.useState('Downtown Main');
 
   return (
-    <header className="h-[64px] bg-white border-b border-neutral-200 px-5 flex items-center justify-between sticky top-0 z-40 shadow-sm">
+    <header className="h-[64px] bg-white border-b border-neutral-200 px-5 flex items-center justify-between sticky top-0 z-40 shadow-sm font-sans">
 
       {/* ── Left: Logo + Branch ── */}
       <div className="flex items-center gap-5">
@@ -44,45 +42,39 @@ export default function PosNavbar() {
         {/* Divider */}
         <div className="h-5 w-px bg-neutral-200" />
 
+        {/* POS Link */}
+        <a
+          href="/employee/pos"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-neutral-200 bg-neutral-50 text-[12px] font-600 text-neutral-700 hover:border-brand-primary/30 hover:bg-brand-primary-light hover:text-brand-primary transition-all cursor-pointer"
+        >
+          <LayoutGrid size={14} className="text-neutral-500" />
+          <span>POS Terminal</span>
+        </a>
+
         {/* Kitchen View Link */}
         <a
           href="/employee/kitchen"
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-neutral-200 bg-neutral-50 text-[12px] font-600 text-neutral-700 hover:border-brand-primary/30 hover:bg-brand-primary-light hover:text-brand-primary transition-all cursor-pointer"
         >
-          <ChefHat size={14} className="text-neutral-500 group-hover:text-brand-primary" />
+          <ChefHat size={14} className="text-neutral-500" />
           <span>Kitchen View</span>
         </a>
 
-        {/* Orders Link */}
+        {/* Orders Link (Active) */}
         <a
           href="/employee/orders"
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-neutral-200 bg-neutral-50 text-[12px] font-600 text-neutral-700 hover:border-brand-primary/30 hover:bg-brand-primary-light hover:text-brand-primary transition-all cursor-pointer"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-brand-primary/30 bg-brand-primary-light text-[12px] font-700 text-brand-primary transition-all cursor-pointer"
         >
-          <Receipt size={14} className="text-neutral-500 group-hover:text-brand-primary" />
+          <Receipt size={14} className="text-brand-primary" />
           <span>Orders</span>
         </a>
       </div>
 
-      {/* ── Center: Global Search ── */}
-      <div className="flex-1 max-w-sm mx-6">
-        <div className="relative">
-          <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" />
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search menu items..."
-            className="w-full bg-neutral-50 border border-neutral-200 rounded-lg py-2 pl-9 pr-8 text-[12px] text-neutral-700 placeholder-neutral-400 focus:outline-none focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/15 focus:bg-white transition-all"
-          />
-          {search && (
-            <button
-              onClick={() => setSearch('')}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600 transition-colors"
-            >
-              <X size={13} />
-            </button>
-          )}
-        </div>
+      {/* ── Center: Title ── */}
+      <div className="text-center">
+        <span className="text-[13px] font-800 text-neutral-800 tracking-wider uppercase">
+          Management Console
+        </span>
       </div>
 
       {/* ── Right: Actions + Profile ── */}
@@ -91,11 +83,6 @@ export default function PosNavbar() {
         {/* Notification Bell */}
         <button className="relative w-8 h-8 flex items-center justify-center rounded-lg bg-neutral-50 border border-neutral-200 text-neutral-500 hover:text-brand-primary hover:border-brand-primary/30 hover:bg-brand-primary-light transition-all cursor-pointer">
           <Bell size={16} />
-          {orders.length + 2 > 0 && (
-            <span className="absolute -top-1 -right-1 min-w-[16px] h-4 bg-brand-primary text-white text-[9px] font-700 rounded-full flex items-center justify-center px-1 border border-white">
-              {orders.length > 0 ? orders.length : 2}
-            </span>
-          )}
         </button>
 
         {/* Settings */}
@@ -109,17 +96,17 @@ export default function PosNavbar() {
         {/* Employee Profile */}
         <div className="flex items-center gap-2.5">
           <div className="text-right">
-            <p className="text-[12px] font-700 text-neutral-800 leading-tight">Hi, Jone</p>
-            <span className="text-[10px] font-600 text-brand-primary leading-tight uppercase tracking-wide">Cashier</span>
+            <p className="text-[12px] font-700 text-neutral-800 leading-tight">Hi, Nikit</p>
+            <span className="text-[10px] font-600 text-brand-primary leading-tight uppercase tracking-wide">Manager</span>
           </div>
           <div className="w-8 h-8 rounded-lg bg-brand-primary flex items-center justify-center text-[11px] font-800 text-white shadow-sm border border-brand-primary-hover/30">
-            JO
+            NK
           </div>
         </div>
 
         {/* Logout */}
         <button
-          onClick={() => { if (confirm('Exit the POS system?')) window.close(); }}
+          onClick={() => { if (confirm('Exit the system?')) window.close(); }}
           className="w-8 h-8 flex items-center justify-center rounded-lg bg-red-50 border border-red-200 text-red-400 hover:bg-red-100 hover:text-red-600 hover:border-red-300 transition-all cursor-pointer"
           title="Exit POS"
         >

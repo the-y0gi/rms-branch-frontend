@@ -7,6 +7,7 @@ import KitchenOrderCard from './KitchenOrderCard';
 import KitchenDetailModal from './KitchenDetailModal';
 import { Order } from '../types';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 export default function KitchenDashboard() {
   // ── States ───────────────────────────────────────────────────
@@ -49,11 +50,9 @@ export default function KitchenDashboard() {
     }
   }, []);
 
-  // ── Polling & Initial Fetch ──────────────────────────────────
+  // ── Initial Fetch ────────────────────────────────────────────
   useEffect(() => {
     fetchOrders();
-    const interval = setInterval(fetchOrders, 5000); // Poll every 5s for real-time updates
-    return () => clearInterval(interval);
   }, [fetchOrders]);
 
   // ── LocalStorage Draft Cart Listener ──
@@ -77,6 +76,29 @@ export default function KitchenDashboard() {
     window.addEventListener('storage', loadDraft);
     return () => window.removeEventListener('storage', loadDraft);
   }, []);
+
+  // ── Fetch Full Order Details for Modal ──
+  const handleSelectOrder = async (order: Order) => {
+    if (order.orderNumber === '#DRAFT') {
+      setSelectedOrder(order);
+      return;
+    }
+    const toastId = toast.loading('Loading order details...');
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+      const res = await axios.get(`${apiUrl}/orders/${order._id}`);
+      if (res.data.success) {
+        setSelectedOrder(res.data.data);
+      } else {
+        toast.error('Failed to load order details');
+      }
+    } catch (err) {
+      console.error('Error fetching order details in kitchen:', err);
+      toast.error('Failed to load order details');
+    } finally {
+      toast.dismiss(toastId);
+    }
+  };
 
   // ── Status Mappings ──
   const getMappedStatus = (order: Order) => {
@@ -232,7 +254,7 @@ export default function KitchenDashboard() {
                 >
                   <KitchenOrderCard
                     order={order}
-                    onClick={() => setSelectedOrder(order)}
+                    onClick={() => handleSelectOrder(order)}
                   />
                 </div>
               ))}
