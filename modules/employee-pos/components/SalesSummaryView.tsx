@@ -315,7 +315,7 @@ export default function SalesSummaryView({ selectedDate }: SalesSummaryViewProps
             </div>
             <table className="w-full text-left text-[12px]">
               <thead>
-                <tr className="bg-neutral-100 text-neutral-600 font-800 text-[10px] uppercase tracking-wider border-b border-neutral-200">
+                <tr className="bg-neutral-100/80 text-neutral-600 font-800 text-[10px] uppercase tracking-wider border-b border-neutral-200/80">
                   <th className="py-2 px-4">Employee</th>
                   <th className="py-2 px-4 text-center">PST</th>
                   <th className="py-2 px-4 text-center">GST</th>
@@ -323,10 +323,22 @@ export default function SalesSummaryView({ selectedDate }: SalesSummaryViewProps
                   <th className="py-2 px-4 text-right">Total</th>
                 </tr>
               </thead>
-              <tbody>
-                <tr>
-                  <td colSpan={5} className="py-3 px-4 text-center text-neutral-400 font-600">No Record Found.</td>
-                </tr>
+              <tbody className="divide-y divide-neutral-200/60 font-650 text-neutral-800">
+                {expense && expense.length > 0 ? (
+                  expense.map((exp: any, idx: number) => (
+                    <tr key={idx} className="hover:bg-neutral-50/70">
+                      <td className="py-2.5 px-4 font-700 text-neutral-900">{exp.employee || exp.employeeName || 'Manager'}</td>
+                      <td className="py-2.5 px-4 text-center text-neutral-500">${Number(exp.pst || 0).toFixed(2)}</td>
+                      <td className="py-2.5 px-4 text-center text-neutral-500">${Number(exp.gst || 0).toFixed(2)}</td>
+                      <td className="py-2.5 px-4 text-center text-neutral-500">${Number(exp.hst || 0).toFixed(2)}</td>
+                      <td className="py-2.5 px-4 text-right font-800 text-brand-primary">${Number(exp.total || exp.amount || 0).toFixed(2)}</td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={5} className="py-3 px-4 text-center text-neutral-400 font-600">No Record Found.</td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>

@@ -1,15 +1,19 @@
 'use client';
 
 import React from 'react';
-import { Search, Bell, Settings, ChefHat, ChevronDown, Power, X, ClipboardList, LayoutGrid } from 'lucide-react';
+import { Search, Bell, Settings, ChefHat, ChevronDown, Power, X, ClipboardList, LayoutGrid, Menu } from 'lucide-react';
 import { usePosStore } from '../store/pos.store';
 
-export default function PosNavbar() {
+interface PosNavbarProps {
+  onToggleSidebar?: () => void;
+}
+
+export default function PosNavbar({ onToggleSidebar }: PosNavbarProps) {
   const { search, setSearch, orders } = usePosStore();
   const [selectedBranch, setSelectedBranch] = React.useState('Downtown Main');
 
   return (
-    <header className="h-[64px] bg-white border-b border-neutral-200 px-5 flex items-center justify-between sticky top-0 z-40 shadow-sm">
+    <header className="h-[64px] bg-white border-b border-neutral-200 px-5 flex items-center justify-between sticky top-0 z-40 shadow-sm font-sans">
 
       {/* ── Left: Logo + Branch ── */}
       <div className="flex items-center gap-5">
@@ -134,6 +138,17 @@ export default function PosNavbar() {
         >
           <Power size={14} />
         </button>
+
+        {/* Menu Drawer Toggle Button */}
+        {onToggleSidebar && (
+          <button
+            onClick={onToggleSidebar}
+            className="w-9 h-9 flex items-center justify-center rounded-lg bg-brand-primary text-white hover:bg-orange-600 transition-all cursor-pointer shadow-xs ml-1"
+            title="Open Sidebar Menu"
+          >
+            <Menu size={18} />
+          </button>
+        )}
       </div>
     </header>
   );

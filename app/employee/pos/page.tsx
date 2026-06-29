@@ -8,12 +8,14 @@ import MenuGrid from '@/modules/employee-pos/components/MenuGrid';
 import CartPanel from '@/modules/employee-pos/components/CartPanel';
 import ModifierDrawer from '@/modules/employee-pos/components/ModifierDrawer';
 import CheckoutModal from '@/modules/employee-pos/components/CheckoutModal';
+import POSSidebarDrawer from '@/modules/employee-pos/components/POSSidebarDrawer';
 import { MenuItem } from '@/modules/employee-pos/types';
 import { usePosStore } from '@/modules/employee-pos/store/pos.store';
 
 export default function PosPage() {
   const [activeItem, setActiveItem] = useState<MenuItem | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const { fetchMenu } = usePosStore();
 
   useEffect(() => {
@@ -31,9 +33,9 @@ export default function PosPage() {
   };
 
   return (
-    <main className="h-screen flex flex-col overflow-hidden bg-neutral-100 text-neutral-900">
+    <main className="h-screen flex flex-col overflow-hidden bg-neutral-100 text-neutral-900 font-sans">
       {/* Navbar */}
-      <PosNavbar />
+      <PosNavbar onToggleSidebar={() => setIsSidebarOpen(true)} />
 
       {/*Horizontal Scrollable Categories */}
       <CategoryCarousel />
@@ -55,6 +57,18 @@ export default function PosPage() {
           <CartPanel />
         </div>
       </div>
+
+      {/* Sidebar Drawer Component */}
+      <POSSidebarDrawer
+        isOpen={isSidebarOpen}
+        onClose={() => setIsSidebarOpen(false)}
+        activeTab="pos"
+        onSelectTab={(tabKey) => {
+          if (tabKey === 'orders' || tabKey === 'dashboard' || tabKey === 'sales_summary' || tabKey === 'expense_payout') {
+            window.location.href = '/employee/orders';
+          }
+        }}
+      />
 
       {/* Modifier Customize Drawer Overlay */}
       <ModifierDrawer

@@ -5,6 +5,8 @@ import axios from 'axios';
 import OrdersNavbar from './OrdersNavbar';
 import DashboardView from './DashboardView';
 import SalesSummaryView from './SalesSummaryView';
+import ExpenseDashboardView from './ExpenseDashboardView';
+import POSSidebarDrawer from './POSSidebarDrawer';
 import OrdersTableView from './OrdersTableView';
 import OrderDetailModal from './OrderDetailModal';
 import { Order } from '../types';
@@ -13,7 +15,8 @@ import toast from 'react-hot-toast';
 
 export default function OrdersDashboard() {
   // ── Sub-tabs ──
-  const [activeSubTab, setActiveSubTab] = useState<'dashboard' | 'orders' | 'sales_summary'>('dashboard');
+  const [activeSubTab, setActiveSubTab] = useState<'dashboard' | 'orders' | 'sales_summary' | 'expense_payout'>('dashboard');
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   // ── Orders State ──
   const [orders, setOrders] = useState<Order[]>([]);
@@ -214,7 +217,7 @@ export default function OrdersDashboard() {
     <main className="h-screen flex flex-col overflow-hidden bg-brand-bg text-neutral-900 font-sans">
       
       {/* Navbar Header */}
-      <OrdersNavbar />
+      <OrdersNavbar onToggleSidebar={() => setIsSidebarOpen(true)} />
 
       {/* ── Secondary Control Bar (Dashboard / Orders / Sales tabs + Filters) ── */}
       <div className="bg-white border-b border-neutral-200 px-6 py-3.5 flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4 shadow-sm flex-shrink-0 select-none">
@@ -222,7 +225,7 @@ export default function OrdersDashboard() {
         {/* Left Side: Sub-tabs and Main Header Text */}
         <div className="flex items-center gap-4 flex-wrap">
           <h1 className="text-xl font-900 text-neutral-900 tracking-tight leading-none min-w-[140px]">
-            {activeSubTab === 'dashboard' ? 'Dashboard' : activeSubTab === 'orders' ? 'Orders' : 'Sales Summary'}
+            {activeSubTab === 'dashboard' ? 'Dashboard' : activeSubTab === 'orders' ? 'Orders' : activeSubTab === 'sales_summary' ? 'Sales Summary' : 'Expense/Payout'}
           </h1>
           
           <div className="flex items-center gap-1 bg-neutral-100 p-1 rounded-xl border border-neutral-200">
@@ -324,7 +327,7 @@ export default function OrdersDashboard() {
             </div>
           )}
 
-          {/* Payment Status Select */}
+          {/* Payment Method Select */}
           {activeSubTab === 'orders' && (
             <div className="relative">
               <select
@@ -340,22 +343,21 @@ export default function OrdersDashboard() {
             </div>
           )}
 
-          {/* More Search (Advance Search Button) */}
+          {/* Advance Search Button */}
           {activeSubTab === 'orders' && (
             <button
               onClick={() => setIsAdvanceSearchOpen(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-neutral-200 bg-neutral-50 hover:bg-neutral-100 text-[12px] font-700 text-neutral-700 hover:border-neutral-350 transition-all cursor-pointer"
+              className="flex items-center gap-1.5 px-3 py-1.5 border border-neutral-200 rounded-lg bg-neutral-50 hover:bg-neutral-100 text-[12px] font-600 text-neutral-700 hover:text-brand-primary transition-all cursor-pointer shadow-2xs"
             >
-              <SlidersHorizontal size={13} className="text-neutral-500" />
-              <span>More Search</span>
+              <SlidersHorizontal size={13} />
+              <span>Advance Search</span>
             </button>
           )}
 
           {/* Clear Filters Button */}
           <button
             onClick={handleClearFilters}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-neutral-200 bg-neutral-50 hover:bg-neutral-100 text-[12px] font-700 text-neutral-700 hover:border-neutral-350 transition-all cursor-pointer"
-            title="Clear all active filters"
+            className="flex items-center gap-1 px-2.5 py-1.5 text-[12px] font-600 text-neutral-500 hover:text-neutral-800 transition-all cursor-pointer"
           >
             <span>Clear</span>
           </button>
@@ -394,6 +396,8 @@ export default function OrdersDashboard() {
               />
             ) : activeSubTab === 'sales_summary' ? (
               <SalesSummaryView selectedDate={singleDate} />
+            ) : activeSubTab === 'expense_payout' ? (
+              <ExpenseDashboardView />
             ) : (
               <OrdersTableView orders={filteredOrders} onSelectOrder={handleSelectOrder} />
             )}
@@ -401,6 +405,20 @@ export default function OrdersDashboard() {
         )}
 
       </div>
+
+      {/* Sidebar Drawer Component */}
+      <POSSidebarDrawer
+        isOpen={isSidebarOpen}
+        onClose={() => setIsSidebarOpen(false)}
+        activeTab={activeSubTab}
+        onSelectTab={(tabKey) => {
+          if (tabKey === 'dashboard' || tabKey === 'orders' || tabKey === 'sales_summary' || tabKey === 'expense_payout') {
+            setActiveSubTab(tabKey as any);
+          } else {
+            toast.success(`Navigating to ${tabKey.replace('_', ' ').toUpperCase()}`);
+          }
+        }}
+      />
 
       {/* ── Advance Search Modal ── */}
       {isAdvanceSearchOpen && (

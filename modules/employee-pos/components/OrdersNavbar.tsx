@@ -1,9 +1,13 @@
 'use client';
 
 import React from 'react';
-import { Bell, Settings, ChefHat, ChevronDown, Power, LayoutGrid, ClipboardList } from 'lucide-react';
+import { Bell, Settings, ChefHat, ChevronDown, Power, LayoutGrid, ClipboardList, Menu } from 'lucide-react';
 
-export default function OrdersNavbar() {
+interface OrdersNavbarProps {
+  onToggleSidebar?: () => void;
+}
+
+export default function OrdersNavbar({ onToggleSidebar }: OrdersNavbarProps) {
   const [selectedBranch, setSelectedBranch] = React.useState('Downtown Main');
 
   return (
@@ -96,13 +100,24 @@ export default function OrdersNavbar() {
         {/* Employee Profile */}
         <div className="flex items-center gap-2.5">
           <div className="text-right">
-            <p className="text-[12px] font-700 text-neutral-800 leading-tight">Hi, Jone</p>
+            <p className="text-[12px] font-700 text-neutral-800 leading-tight">Hi, Manager</p>
             <span className="text-[10px] font-600 text-brand-primary leading-tight uppercase tracking-wide">Manager</span>
           </div>
           <div className="w-8 h-8 rounded-lg bg-brand-primary flex items-center justify-center text-[11px] font-800 text-white shadow-sm border border-brand-primary-hover/30">
-            JO
+            MG
           </div>
         </div>
+
+        {/* Menu Drawer Toggle Button */}
+        {onToggleSidebar && (
+          <button
+            onClick={onToggleSidebar}
+            className="w-9 h-9 flex items-center justify-center rounded-lg bg-brand-primary text-white hover:bg-orange-600 transition-all cursor-pointer shadow-xs"
+            title="Open Sidebar Menu"
+          >
+            <Menu size={18} />
+          </button>
+        )}
 
         {/* Logout */}
         <button
