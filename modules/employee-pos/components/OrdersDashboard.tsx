@@ -4,6 +4,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import OrdersNavbar from './OrdersNavbar';
 import DashboardView from './DashboardView';
+import SalesSummaryView from './SalesSummaryView';
 import OrdersTableView from './OrdersTableView';
 import OrderDetailModal from './OrderDetailModal';
 import { Order } from '../types';
@@ -12,7 +13,7 @@ import toast from 'react-hot-toast';
 
 export default function OrdersDashboard() {
   // ── Sub-tabs ──
-  const [activeSubTab, setActiveSubTab] = useState<'dashboard' | 'orders'>('dashboard');
+  const [activeSubTab, setActiveSubTab] = useState<'dashboard' | 'orders' | 'sales_summary'>('dashboard');
 
   // ── Orders State ──
   const [orders, setOrders] = useState<Order[]>([]);
@@ -220,8 +221,8 @@ export default function OrdersDashboard() {
         
         {/* Left Side: Sub-tabs and Main Header Text */}
         <div className="flex items-center gap-4 flex-wrap">
-          <h1 className="text-xl font-900 text-neutral-900 tracking-tight leading-none min-w-[100px]">
-            {activeSubTab === 'dashboard' ? 'Dashboard' : 'Orders'}
+          <h1 className="text-xl font-900 text-neutral-900 tracking-tight leading-none min-w-[140px]">
+            {activeSubTab === 'dashboard' ? 'Dashboard' : activeSubTab === 'orders' ? 'Orders' : 'Sales Summary'}
           </h1>
           
           <div className="flex items-center gap-1 bg-neutral-100 p-1 rounded-xl border border-neutral-200">
@@ -256,8 +257,14 @@ export default function OrdersDashboard() {
               Orders
             </button>
             <button
-              onClick={() => toast.success('Sales summary is coming soon')}
-              className="px-4 py-1.5 rounded-lg text-[11px] font-800 tracking-wide uppercase transition-all duration-150 text-neutral-500 hover:text-brand-primary cursor-pointer"
+              onClick={() => {
+                setActiveSubTab('sales_summary');
+              }}
+              className={`px-4 py-1.5 rounded-lg text-[11px] font-800 tracking-wide uppercase transition-all duration-150 cursor-pointer ${
+                activeSubTab === 'sales_summary'
+                  ? 'bg-brand-primary text-white shadow-sm'
+                  : 'text-neutral-500 hover:text-brand-primary'
+              }`}
             >
               Sales Summary
             </button>
@@ -385,6 +392,8 @@ export default function OrdersDashboard() {
                 selectedDate={singleDate}
                 searchKeyword={searchKeyword}
               />
+            ) : activeSubTab === 'sales_summary' ? (
+              <SalesSummaryView selectedDate={singleDate} />
             ) : (
               <OrdersTableView orders={filteredOrders} onSelectOrder={handleSelectOrder} />
             )}
