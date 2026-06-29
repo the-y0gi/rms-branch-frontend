@@ -725,17 +725,7 @@ export const usePosStore = create<PosState>((set, get) => ({
         set({ nextOrderNumber: res.data.data });
       }
     } catch {
-      const d = new Date();
-      const localDate = new Date(d.getTime() - d.getTimezoneOffset() * 60000);
-      const todayStr = localDate.toISOString().slice(0, 10).replace(/-/g, "");
-      const prefix =
-        {
-          takeout: "TO",
-          delivery: "DL",
-          "drive-through": "DT",
-          "dine-in": "DN",
-        }[get().orderType] ?? "TO";
-      set({ nextOrderNumber: `${prefix}-101` });
+      set({ nextOrderNumber: "101" });
     }
   },
 }));

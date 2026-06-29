@@ -81,7 +81,7 @@ export default function ThermalReceipt({ order }: ThermalReceiptProps) {
         {/* Order Header */}
         <div className="text-center space-y-1 mb-3">
           <h1 className="text-lg font-900 tracking-tight uppercase">
-            Order # : {order.orderNumber.replace("#", "")}
+            Order # : {order.orderNumber.replace(/^[#A-Za-z\-]+/, "")}
           </h1>
           <p className="text-[10px] font-600 text-neutral-800">
             {formattedDateStr}
