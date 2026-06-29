@@ -5,6 +5,7 @@ import { X, Printer, RefreshCw, CreditCard } from 'lucide-react';
 import { Order, CartItem, SplitPayment } from '../types';
 import axios from 'axios';
 import toast from 'react-hot-toast';
+import ThermalReceipt from './ThermalReceipt';
 
 interface OrderDetailModalProps {
   order: Order | null;
@@ -15,10 +16,38 @@ interface OrderDetailModalProps {
 export default function OrderDetailModal({ order, onClose, onRefresh }: OrderDetailModalProps) {
   const [updating, setUpdating] = useState(false);
   const [showPayForm, setShowPayForm] = useState(false);
+  const [showPrintReceipt, setShowPrintReceipt] = useState(false);
+  const [isPrinting, setIsPrinting] = useState(false);
   const [payMethod, setPayMethod] = useState<'cash' | 'card' | 'debit' | 'credit'>('cash');
   const [cashGivenInput, setCashGivenInput] = useState('');
 
   if (!order) return null;
+
+  const handleDownloadPdf = async () => {
+    if (isPrinting || !order) return;
+    setIsPrinting(true);
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+      const response = await axios.get(`${apiUrl}/orders/${order._id}/pdf`, {
+        responseType: 'blob',
+      });
+
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `invoice-${order.orderNumber.replace('#', '')}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      toast.success('Invoice PDF downloaded successfully!');
+    } catch (err: any) {
+      toast.error('Failed to download invoice PDF');
+    } finally {
+      setIsPrinting(false);
+    }
+  };
 
   const formatDate = (dateStr: string | null | undefined) => {
     if (!dateStr) return 'N/A';
@@ -159,11 +188,21 @@ export default function OrderDetailModal({ order, onClose, onRefresh }: OrderDet
             </span>
             {!order.orderNumber.startsWith('#DRAFT') && (
               <button
-                onClick={() => window.print()}
-                className="flex items-center gap-1.5 py-1.5 px-3.5 bg-white/10 hover:bg-white/20 rounded-lg border border-white/10 text-[11px] font-700 transition-all cursor-pointer ml-2"
+                onClick={handleDownloadPdf}
+                disabled={isPrinting}
+                className="flex items-center gap-1.5 py-1.5 px-3.5 bg-white/10 hover:bg-white/20 rounded-lg border border-white/10 text-[11px] font-700 transition-all cursor-pointer ml-2 disabled:opacity-50"
               >
-                <Printer size={13} />
-                <span>Print Invoice</span>
+                {isPrinting ? (
+                  <>
+                    <RefreshCw size={13} className="animate-spin text-white" />
+                    <span>Downloading...</span>
+                  </>
+                ) : (
+                  <>
+                    <Printer size={13} />
+                    <span>Print Invoice</span>
+                  </>
+                )}
               </button>
             )}
           </div>

@@ -1,10 +1,11 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { X, Clock, Printer, Trash2, Plus, Minus } from "lucide-react";
+import { X, Clock, Printer, Trash2, Plus, Minus, RefreshCw } from "lucide-react";
 import axios from "axios";
 import toast from "react-hot-toast";
 import { Order } from "../types";
+import ThermalReceipt from "./ThermalReceipt";
 
 interface KitchenDetailModalProps {
   order: Order | null;
@@ -60,6 +61,8 @@ export default function KitchenDetailModal({
   onStatusChange,
 }: KitchenDetailModalProps) {
   const [updating, setUpdating] = useState(false);
+  const [showPrintReceipt, setShowPrintReceipt] = useState(false);
+  const [isPrinting, setIsPrinting] = useState(false);
   const [dueDate, setDueDate] = useState<Date | null>(null);
   const [localOrder, setLocalOrder] = useState<Order | null>(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -522,9 +525,30 @@ export default function KitchenDetailModal({
     );
   };
 
-  // Print mock invoice
-  const handlePrintInvoice = () => {
-    toast.success("Invoice print job sent to terminal printer.");
+  const handlePrintInvoice = async () => {
+    if (isPrinting || !localOrder) return;
+    setIsPrinting(true);
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+      const response = await axios.get(`${apiUrl}/orders/${localOrder._id}/pdf`, {
+        responseType: 'blob',
+      });
+
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `invoice-${localOrder.orderNumber.replace('#', '')}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      toast.success('Invoice PDF downloaded successfully!');
+    } catch (err: any) {
+      toast.error('Failed to download invoice PDF');
+    } finally {
+      setIsPrinting(false);
+    }
   };
 
   const paymentsTotal = localOrder.payments
@@ -623,10 +647,20 @@ export default function KitchenDetailModal({
             {!isDraft && (
               <button
                 onClick={handlePrintInvoice}
-                className="flex items-center gap-1.5 bg-white/10 hover:bg-white/25 text-[11px] font-700 px-3.5 py-1.5 rounded-lg border border-white/10 transition-all cursor-pointer"
+                disabled={isPrinting}
+                className="flex items-center gap-1.5 bg-white/10 hover:bg-white/25 text-[11px] font-700 px-3.5 py-1.5 rounded-lg border border-white/10 transition-all cursor-pointer disabled:opacity-50"
               >
-                <Printer size={13} />
-                Print Invoice
+                {isPrinting ? (
+                  <>
+                    <RefreshCw size={13} className="animate-spin text-white" />
+                    Downloading...
+                  </>
+                ) : (
+                  <>
+                    <Printer size={13} />
+                    Print Invoice
+                  </>
+                )}
               </button>
             )}
             <span className="bg-brand-primary text-white text-[11px] font-800 px-3.5 py-1.5 rounded-lg uppercase tracking-wider select-none shadow-xs">
