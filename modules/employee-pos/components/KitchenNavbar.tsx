@@ -1,14 +1,15 @@
 'use client';
 
+import { ChefHat, ChevronDown, Bell, Settings, Power, LayoutGrid, ClipboardList, Menu } from 'lucide-react';
 import React from 'react';
-import { ChefHat, ChevronDown, Bell, Settings, Power, LayoutGrid, ClipboardList } from 'lucide-react';
 
 interface KitchenNavbarProps {
   activePendingCount: number;
   activeConfirmedCount: number;
+  onToggleSidebar?: () => void;
 }
 
-export default function KitchenNavbar({ activePendingCount, activeConfirmedCount }: KitchenNavbarProps) {
+export default function KitchenNavbar({ activePendingCount, activeConfirmedCount, onToggleSidebar }: KitchenNavbarProps) {
   const [selectedBranch, setSelectedBranch] = React.useState('Downtown Main');
   const badgeCount = activePendingCount + activeConfirmedCount;
 
@@ -54,6 +55,15 @@ export default function KitchenNavbar({ activePendingCount, activeConfirmedCount
         >
           <LayoutGrid size={14} className="text-neutral-500" />
           <span>POS Terminal</span>
+        </a>
+
+        {/* Kitchen View Link (Active) */}
+        <a
+          href="/employee/kitchen"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-brand-primary/30 bg-brand-primary-light text-[12px] font-700 text-brand-primary transition-all cursor-pointer"
+        >
+          <ChefHat size={14} className="text-brand-primary" />
+          <span>Kitchen View</span>
         </a>
 
         {/* Orders Link */}
@@ -103,6 +113,17 @@ export default function KitchenNavbar({ activePendingCount, activeConfirmedCount
             JO
           </div>
         </div>
+
+        {/* Menu Drawer Toggle Button */}
+        {onToggleSidebar && (
+          <button
+            onClick={onToggleSidebar}
+            className="w-9 h-9 flex items-center justify-center rounded-lg bg-brand-primary text-white hover:bg-orange-600 transition-all cursor-pointer shadow-xs"
+            title="Open Sidebar Menu"
+          >
+            <Menu size={18} />
+          </button>
+        )}
 
         {/* Logout */}
         <button

@@ -65,7 +65,7 @@ export default function PosPage() {
         activeTab="pos"
         onSelectTab={(tabKey) => {
           if (tabKey === 'orders' || tabKey === 'dashboard' || tabKey === 'sales_summary' || tabKey === 'expense_payout') {
-            window.location.href = '/employee/orders';
+            window.location.href = `/employee/orders?tab=${tabKey}`;
           }
         }}
       />

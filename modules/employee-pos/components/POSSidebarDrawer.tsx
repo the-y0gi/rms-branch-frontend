@@ -4,7 +4,7 @@ import React from 'react';
 import { 
   X, LogOut, LayoutDashboard, KeyRound, Clock, ShoppingBag, 
   Receipt, ArrowLeftRight, Wallet, Users, UtensilsCrossed, 
-  Settings, UserCheck, Lock, Bell, BarChart3, Power
+  Settings, UserCheck, Lock, Bell, BarChart3, Power, ChefHat
 } from 'lucide-react';
 
 interface POSSidebarDrawerProps {
@@ -22,7 +22,8 @@ export default function POSSidebarDrawer({ isOpen, onClose, activeTab, onSelectT
     { key: 'login_code', label: 'Login As Code', icon: KeyRound },
     { key: 'check_in_out', label: 'Check-In/Out', icon: Clock },
     { key: 'pos', label: 'POS', icon: ShoppingBag },
-    { key: 'orders', label: 'Orders', icon: Receipt },
+    { key: 'kitchen', label: 'Kitchen View', icon: ChefHat },
+    // { key: 'orders', label: 'Orders', icon: Receipt },
     { key: 'transactions', label: 'Transactions', icon: ArrowLeftRight },
     { key: 'expense_payout', label: 'Expense/Payout', icon: Wallet },
     { key: 'customers', label: 'Customers', icon: Users },
@@ -71,7 +72,9 @@ export default function POSSidebarDrawer({ isOpen, onClose, activeTab, onSelectT
         <div className="flex-1 overflow-y-auto py-2 px-3 space-y-1">
           {menuItems.map((item) => {
             const Icon = item.icon;
-            const isActive = activeTab === item.key;
+            const isActive = activeTab === item.key || 
+                             (item.key === 'transactions' && activeTab === 'orders') ||
+                             (item.key === 'reports' && activeTab === 'sales_summary');
 
             return (
               <button
@@ -79,11 +82,24 @@ export default function POSSidebarDrawer({ isOpen, onClose, activeTab, onSelectT
                 onClick={() => {
                   if (item.key === 'pos') {
                     window.location.href = '/employee/pos';
-                  } else if (item.key === 'orders' || item.key === 'dashboard' || item.key === 'expense_payout' || item.key === 'sales_summary') {
-                    if (typeof window !== 'undefined' && window.location.pathname.includes('/employee/pos')) {
-                      window.location.href = '/employee/orders';
+                  } else if (item.key === 'kitchen') {
+                    window.location.href = '/employee/kitchen';
+                  } else if (
+                    item.key === 'orders' || 
+                    item.key === 'dashboard' || 
+                    item.key === 'expense_payout' || 
+                    item.key === 'sales_summary' || 
+                    item.key === 'transactions' ||
+                    item.key === 'reports'
+                  ) {
+                    let targetTab = item.key;
+                    if (item.key === 'transactions') targetTab = 'orders';
+                    if (item.key === 'reports') targetTab = 'sales_summary';
+
+                    if (typeof window !== 'undefined' && !window.location.pathname.includes('/employee/orders')) {
+                      window.location.href = `/employee/orders?tab=${targetTab}`;
                     } else {
-                      onSelectTab(item.key);
+                      onSelectTab(targetTab);
                     }
                   } else {
                     onSelectTab(item.key);

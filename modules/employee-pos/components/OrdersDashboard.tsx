@@ -17,6 +17,7 @@ export default function OrdersDashboard() {
   // ── Sub-tabs ──
   const [activeSubTab, setActiveSubTab] = useState<'dashboard' | 'orders' | 'sales_summary' | 'expense_payout'>('dashboard');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isReady, setIsReady] = useState(false);
 
   // ── Orders State ──
   const [orders, setOrders] = useState<Order[]>([]);
@@ -56,6 +57,7 @@ export default function OrdersDashboard() {
 
   // ── Fetch Orders from API ──
   const fetchOrders = useCallback(async () => {
+    if (!isReady) return;
     setLoading(true);
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
@@ -87,7 +89,38 @@ export default function OrdersDashboard() {
     } finally {
       setLoading(false);
     }
-  }, [activeSubTab, startDate, endDate, singleDate, statusFilter, paymentFilter]);
+  }, [isReady, activeSubTab, startDate, endDate, singleDate, statusFilter, paymentFilter]);
+
+  // ── Parse Tab Query Param On Mount ──
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const tab = params.get('tab');
+      if (tab && ['dashboard', 'orders', 'sales_summary', 'expense_payout'].includes(tab)) {
+        setActiveSubTab(tab as any);
+        if (tab === 'dashboard') {
+          setStartDate(getPastDateStr(30));
+          setEndDate(getTodayDateStr());
+        } else if (tab === 'orders') {
+          setStartDate(getTodayDateStr());
+          setEndDate(getTodayDateStr());
+          setSingleDate(getTodayDateStr());
+        }
+      }
+    }
+    setIsReady(true);
+  }, []);
+
+  // ── Sync Active Tab to URL ──
+  useEffect(() => {
+    if (isReady && typeof window !== 'undefined') {
+      const url = new URL(window.location.href);
+      if (url.searchParams.get('tab') !== activeSubTab) {
+        url.searchParams.set('tab', activeSubTab);
+        window.history.pushState({}, '', url.pathname + url.search);
+      }
+    }
+  }, [activeSubTab, isReady]);
 
   // ── Initial Fetch ──
   useEffect(() => {

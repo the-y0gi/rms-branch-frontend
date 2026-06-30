@@ -5,6 +5,7 @@ import axios from 'axios';
 import KitchenNavbar from './KitchenNavbar';
 import KitchenOrderCard from './KitchenOrderCard';
 import KitchenDetailModal from './KitchenDetailModal';
+import POSSidebarDrawer from './POSSidebarDrawer';
 import { Order } from '../types';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -14,6 +15,7 @@ export default function KitchenDashboard() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [draftCart, setDraftCart] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'confirmed' | 'preparing' | 'ready'>('all');
   const [typeFilter, setTypeFilter] = useState<'all' | 'takeout' | 'drive-through' | 'dine-in' | 'delivery'>('all');
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
@@ -164,7 +166,11 @@ export default function KitchenDashboard() {
   return (
     <div className="h-screen flex flex-col overflow-hidden bg-brand-bg text-neutral-900 font-sans">
       {/* Navbar */}
-      <KitchenNavbar activePendingCount={activeDraftCount} activeConfirmedCount={countConfirmed} />
+      <KitchenNavbar 
+        activePendingCount={activeDraftCount} 
+        activeConfirmedCount={countConfirmed} 
+        onToggleSidebar={() => setIsSidebarOpen(true)} 
+      />
 
       {/* ── Filter Controls Section (Premium Low-Profile Segmented Controls) ── */}
       <div className="bg-white border-b border-neutral-200 px-6 py-3 flex flex-col md:flex-row md:items-center md:justify-between gap-3 shadow-xs flex-shrink-0 select-none">
@@ -305,6 +311,18 @@ export default function KitchenDashboard() {
         order={selectedOrder}
         onClose={() => setSelectedOrder(null)}
         onStatusChange={fetchOrders}
+      />
+
+      {/* Sidebar Drawer Component */}
+      <POSSidebarDrawer
+        isOpen={isSidebarOpen}
+        onClose={() => setIsSidebarOpen(false)}
+        activeTab="kitchen"
+        onSelectTab={(tabKey) => {
+          if (tabKey === 'orders' || tabKey === 'dashboard' || tabKey === 'sales_summary' || tabKey === 'expense_payout') {
+            window.location.href = `/employee/orders?tab=${tabKey}`;
+          }
+        }}
       />
     </div>
   );
