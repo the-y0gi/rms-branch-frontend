@@ -16,6 +16,12 @@ export default function SalesSummaryView({ selectedDate }: SalesSummaryViewProps
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<any>(null);
 
+  // Deposit modal state
+  const [isDepositOpen, setIsDepositOpen] = useState(false);
+  const [cashDeposit, setCashDeposit] = useState('');
+  const [cardDeposit, setCardDeposit] = useState('');
+  const [accountPayDeposit, setAccountPayDeposit] = useState('');
+
   const getFallbackData = useCallback(() => ({
     dateRange: { startDate: selectedDate, endDate: selectedDate },
     completedOrders: { count: 0, totalAmount: 0 },
@@ -75,8 +81,8 @@ export default function SalesSummaryView({ selectedDate }: SalesSummaryViewProps
     driverReport: []
   }), [selectedDate]);
 
-  const fetchSummary = useCallback(async () => {
-    setLoading(true);
+  const fetchSummary = useCallback(async (showLoader = true) => {
+    if (showLoader) setLoading(true);
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
       const res = await axios.get(`${apiUrl}/orders/sales-summary`, {
@@ -92,9 +98,48 @@ export default function SalesSummaryView({ selectedDate }: SalesSummaryViewProps
       console.warn('Backend connection issue, using fallback empty values:', err);
       setData(getFallbackData());
     } finally {
-      setLoading(false);
+      if (showLoader) setLoading(false);
     }
   }, [selectedDate, getFallbackData]);
+
+  const handleOpenDeposit = () => {
+    if (data) {
+      const expectedCash = data.moneyToBeCollected?.cash || 0;
+      const expectedCard = data.moneyToBeCollected?.card || 0;
+      const expectedAccPay = data.moneyToBeCollected?.accountPay || 0;
+
+      // Pre-fill with saved deposit if it exists, otherwise fall back to expected cash formatted to 2 decimals
+      setCashDeposit(data.deposit ? Number(data.deposit.cashAmount).toFixed(2) : Number(expectedCash).toFixed(2));
+      setCardDeposit(data.deposit ? Number(data.deposit.cardAmount).toFixed(2) : Number(expectedCard).toFixed(2));
+      setAccountPayDeposit(data.deposit ? Number(data.deposit.accountPayAmount).toFixed(2) : Number(expectedAccPay).toFixed(2));
+    }
+    setIsDepositOpen(true);
+  };
+
+  const handleSaveDeposit = async (type: 'cash' | 'card' | 'accountPay') => {
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+      const payload = {
+        date: selectedDate,
+        cashAmount: parseFloat(cashDeposit) || 0,
+        cardAmount: parseFloat(cardDeposit) || 0,
+        accountPayAmount: parseFloat(accountPayDeposit) || 0,
+      };
+
+      const res = await axios.post(`${apiUrl}/orders/sales-summary/deposit`, payload);
+      if (res.data.success) {
+        toast.success(`${type.toUpperCase()} deposit saved successfully!`);
+        // Refresh the summary silently so the page data doesn't disappear
+        fetchSummary(false);
+        setIsDepositOpen(false);
+      } else {
+        toast.error(res.data.message || 'Failed to save deposit.');
+      }
+    } catch (err: any) {
+      console.error('Failed to save deposit:', err);
+      toast.error(err.response?.data?.message || 'Error occurred while saving deposit.');
+    }
+  };
 
   useEffect(() => {
     fetchSummary();
@@ -148,7 +193,7 @@ export default function SalesSummaryView({ selectedDate }: SalesSummaryViewProps
           </button>
 
           <button 
-            onClick={fetchSummary}
+            onClick={() => fetchSummary()}
             className="p-1.5 rounded-lg border border-neutral-250 bg-neutral-50 hover:bg-neutral-100 text-neutral-600 hover:text-brand-primary transition-all cursor-pointer shadow-2xs"
             title="Refresh Report"
           >
@@ -317,6 +362,7 @@ export default function SalesSummaryView({ selectedDate }: SalesSummaryViewProps
               <thead>
                 <tr className="bg-neutral-100/80 text-neutral-600 font-800 text-[10px] uppercase tracking-wider border-b border-neutral-200/80">
                   <th className="py-2 px-4">Employee</th>
+                  <th className="py-2 px-4 text-center">Mode</th>
                   <th className="py-2 px-4 text-center">PST</th>
                   <th className="py-2 px-4 text-center">GST</th>
                   <th className="py-2 px-4 text-center">HST</th>
@@ -328,6 +374,11 @@ export default function SalesSummaryView({ selectedDate }: SalesSummaryViewProps
                   expense.map((exp: any, idx: number) => (
                     <tr key={idx} className="hover:bg-neutral-50/70">
                       <td className="py-2.5 px-4 font-700 text-neutral-900">{exp.employee || exp.employeeName || 'Manager'}</td>
+                      <td className="py-2.5 px-4 text-center">
+                        <span className={`px-2 py-0.5 rounded-full text-[9px] font-800 uppercase tracking-wider ${exp.paymentMode === 'card' ? 'bg-purple-100 text-purple-800 border border-purple-200' : 'bg-emerald-100 text-emerald-800 border border-emerald-200'}`}>
+                          {exp.paymentMode || 'cash'}
+                        </span>
+                      </td>
                       <td className="py-2.5 px-4 text-center text-neutral-500">${Number(exp.pst || 0).toFixed(2)}</td>
                       <td className="py-2.5 px-4 text-center text-neutral-500">${Number(exp.gst || 0).toFixed(2)}</td>
                       <td className="py-2.5 px-4 text-center text-neutral-500">${Number(exp.hst || 0).toFixed(2)}</td>
@@ -336,7 +387,7 @@ export default function SalesSummaryView({ selectedDate }: SalesSummaryViewProps
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={5} className="py-3 px-4 text-center text-neutral-400 font-600">No Record Found.</td>
+                    <td colSpan={6} className="py-3 px-4 text-center text-neutral-400 font-600">No Record Found.</td>
                   </tr>
                 )}
               </tbody>
@@ -469,7 +520,7 @@ export default function SalesSummaryView({ selectedDate }: SalesSummaryViewProps
               </thead>
               <tbody className="divide-y divide-neutral-200/60 font-650 text-neutral-800">
                 <tr>
-                  <td className="py-2 px-4">Percentage Discount</td>
+                  <td className="py-2 px-4">Discount</td>
                   <td className="py-2 px-4 text-right font-700 text-amber-600">${discountSummary.percentageDiscount.toFixed(2)}</td>
                 </tr>
                 <tr className="bg-neutral-50 font-900 text-neutral-900 border-t border-neutral-200/80">
@@ -579,7 +630,6 @@ export default function SalesSummaryView({ selectedDate }: SalesSummaryViewProps
                   </tbody>
                 </table>
               </div>
-
               {/* POS */}
               <div className="border border-neutral-200 rounded-lg overflow-hidden">
                 <div className="bg-neutral-100 px-3 py-1 font-800 text-[11px] uppercase text-neutral-700">POS</div>
@@ -650,11 +700,16 @@ export default function SalesSummaryView({ selectedDate }: SalesSummaryViewProps
 
               <div className="flex justify-center">
                 <button 
-                  onClick={() => toast.success('Deposit request logged successfully!')}
-                  className="flex items-center gap-2 px-6 py-2 bg-red-700 hover:bg-red-800 text-white font-800 text-[12px] uppercase tracking-wide rounded-full shadow-sm active:scale-95 transition-all cursor-pointer"
+                  onClick={handleOpenDeposit}
+                  disabled={!!data.deposit}
+                  className={`flex items-center gap-2 px-6 py-2 text-white font-800 text-[12px] uppercase tracking-wide rounded-full shadow-sm transition-all ${
+                    data.deposit 
+                      ? 'bg-neutral-250 text-neutral-400 cursor-not-allowed opacity-60'
+                      : 'bg-red-700 hover:bg-red-800 active:scale-95 cursor-pointer'
+                  }`}
                 >
                   <PlusCircle size={15} />
-                  <span>Add Deposit</span>
+                  <span>{data.deposit ? 'Deposited' : 'Add Deposit'}</span>
                 </button>
               </div>
             </div>
@@ -664,6 +719,107 @@ export default function SalesSummaryView({ selectedDate }: SalesSummaryViewProps
 
       </div>
 
+      {isDepositOpen && (
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 animate-fade-in font-sans">
+          <div className="bg-white rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden animate-scale-up border border-neutral-200">
+            {/* Modal Header */}
+            <div className="bg-brand-primary text-white px-5 py-3.5 flex items-center justify-between">
+              <h3 className="font-800 text-[13px] uppercase tracking-wide">Deposit</h3>
+              <button
+                type="button"
+                onClick={() => setIsDepositOpen(false)}
+                className="text-white hover:text-white/80 cursor-pointer"
+              >
+                <XCircle size={18} />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6 space-y-6">
+              <div className="text-[12px] text-neutral-800 font-750">
+                Report Date : <strong className="text-neutral-900 font-900">{selectedDate}</strong>
+              </div>
+
+              {/* Cash Deposit */}
+              <div className="space-y-1.5">
+                <label className="text-[11px] text-neutral-500 font-700 block">Cash Deposit</label>
+                <div className="flex items-center gap-3">
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={cashDeposit}
+                    disabled={!!data.deposit}
+                    onChange={(e) => setCashDeposit(e.target.value)}
+                    className={`flex-1 border rounded-lg px-3 py-2 text-[12px] font-600 focus:outline-none ${
+                      data.deposit 
+                        ? 'bg-neutral-100 border-neutral-200 text-neutral-400 cursor-not-allowed'
+                        : 'bg-neutral-50 border border-neutral-250 text-neutral-700 focus:border-brand-primary'
+                    }`}
+                    placeholder="Enter cash deposit amount"
+                  />
+                  <button
+                    type="button"
+                    disabled={!!data.deposit}
+                    onClick={() => handleSaveDeposit('cash')}
+                    className={`px-4 py-2 text-[11px] font-800 tracking-wide rounded-full shadow-sm active:scale-95 transition-all min-w-[130px] ${
+                      data.deposit 
+                        ? 'bg-neutral-200 text-neutral-400 cursor-not-allowed'
+                        : 'bg-brand-primary hover:bg-brand-primary-hover text-white cursor-pointer'
+                    }`}
+                  >
+                    {data.deposit ? 'Deposited' : 'Add Cash Deposit'}
+                  </button>
+                </div>
+              </div>
+
+              {/* Card Deposit */}
+              <div className="space-y-1.5">
+                <label className="text-[11px] text-neutral-500 font-700 block">Card Deposit</label>
+                <div className="flex items-center gap-3">
+                  <input
+                    type="number"
+                    value={cardDeposit}
+                    disabled
+                    className="flex-1 bg-neutral-100 border border-neutral-200 rounded-lg px-3 py-2 text-[12px] font-600 text-neutral-400 cursor-not-allowed"
+                    placeholder="Card deposit amount"
+                  />
+                  <button
+                    type="button"
+                    disabled={true}
+                    className="px-4 py-2 bg-neutral-200 text-neutral-450 text-[11px] font-800 tracking-wide rounded-full shadow-sm cursor-not-allowed min-w-[130px]"
+                  >
+                    Add Card Deposit
+                  </button>
+                </div>
+              </div>
+
+              {/* Account Pay Deposit */}
+              <div className="space-y-1.5">
+                <label className="text-[11px] text-neutral-500 font-700 block">Account Pay Deposit</label>
+                <div className="flex items-center gap-3">
+                  <input
+                    type="number"
+                    value={accountPayDeposit}
+                    disabled
+                    className="flex-1 bg-neutral-100 border border-neutral-200 rounded-lg px-3 py-2 text-[12px] font-600 text-neutral-400 cursor-not-allowed"
+                    placeholder="Account pay deposit amount"
+                  />
+                  <button
+                    type="button"
+                    disabled={true}
+                    className="px-4 py-2 bg-neutral-200 text-neutral-450 text-[11px] font-800 tracking-wide rounded-full shadow-sm cursor-not-allowed min-w-[130px]"
+                  >
+                    Add Account Pay
+                  </button>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
+
+

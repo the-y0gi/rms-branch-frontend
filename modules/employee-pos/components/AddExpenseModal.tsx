@@ -21,6 +21,7 @@ export default function AddExpenseModal({ isOpen, onClose, onSuccess }: AddExpen
   const [gst, setGst] = useState('');
   const [hst, setHst] = useState('');
   const [description, setDescription] = useState('');
+  const [paymentMode, setPaymentMode] = useState<'cash' | 'card'>('cash');
   const [submitting, setSubmitting] = useState(false);
 
   if (!isOpen) return null;
@@ -39,6 +40,7 @@ export default function AddExpenseModal({ isOpen, onClose, onSuccess }: AddExpen
         expenseType,
         employeeName,
         expenseDate,
+        paymentMode,
         amount: parseFloat(amount) || 0,
         pst: parseFloat(pst) || 0,
         gst: parseFloat(gst) || 0,
@@ -96,6 +98,7 @@ export default function AddExpenseModal({ isOpen, onClose, onSuccess }: AddExpen
               <option value="Raw Materials / Inventory">Raw Materials / Inventory</option>
               <option value="Utilities">Utilities</option>
               <option value="Misc Payout">Misc Payout</option>
+              <option value="Other">Other</option>
             </select>
           </div>
 
@@ -137,6 +140,48 @@ export default function AddExpenseModal({ isOpen, onClose, onSuccess }: AddExpen
                   className="sr-only"
                 />
                 <span className="text-neutral-800 font-600 text-xs">Store Expense</span>
+              </label>
+            </div>
+          </div>
+
+          {/* Payment Mode */}
+          <div>
+            <label className="block text-neutral-700 font-750 mb-1.5 text-[12px]">
+              Payment Mode <span className="text-red-500">*</span>
+            </label>
+            <div className="flex items-center gap-8 font-650 text-neutral-700 bg-white px-5 py-3 rounded-full border border-neutral-300 shadow-2xs">
+              <label className="flex items-center gap-3 cursor-pointer select-none">
+                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${paymentMode === 'cash' ? 'border-neutral-700 bg-white' : 'border-neutral-400 bg-white'}`}>
+                  {paymentMode === 'cash' && (
+                    <div className="w-3 h-3 rounded-full bg-brand-primary"></div>
+                  )}
+                </div>
+                <input
+                  type="radio"
+                  name="paymentMode"
+                  value="cash"
+                  checked={paymentMode === 'cash'}
+                  onChange={() => setPaymentMode('cash')}
+                  className="sr-only"
+                />
+                <span className="text-neutral-800 font-600 text-xs">Cash</span>
+              </label>
+
+              <label className="flex items-center gap-3 cursor-pointer select-none">
+                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${paymentMode === 'card' ? 'border-neutral-700 bg-white' : 'border-neutral-400 bg-white'}`}>
+                  {paymentMode === 'card' && (
+                    <div className="w-3 h-3 rounded-full bg-brand-primary"></div>
+                  )}
+                </div>
+                <input
+                  type="radio"
+                  name="paymentMode"
+                  value="card"
+                  checked={paymentMode === 'card'}
+                  onChange={() => setPaymentMode('card')}
+                  className="sr-only"
+                />
+                <span className="text-neutral-800 font-600 text-xs">Card</span>
               </label>
             </div>
           </div>
