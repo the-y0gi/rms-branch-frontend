@@ -48,7 +48,7 @@ export default function AddExpenseModal({ isOpen, onClose, onSuccess }: AddExpen
         description
       };
 
-      await axios.post('http://localhost:5000/api/expenses', payload);
+      await axios.post(process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/expenses", payload);
       toast.success('Expense/Payout logged successfully!');
       onSuccess();
       onClose();
