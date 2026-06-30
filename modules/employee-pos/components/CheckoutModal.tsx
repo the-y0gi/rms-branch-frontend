@@ -81,6 +81,7 @@ export default function CheckoutModal() {
   const [showOrderLater, setShowOrderLater] = useState(false);
   const [showPromo, setShowPromo] = useState(false);
   const [showCustomer, setShowCustomer] = useState(false);
+  const submittingRef = React.useRef(false);
 
   // Custom split state
   const [nextSplitAmount, setNextSplitAmount] = useState<string>("");
@@ -132,11 +133,15 @@ export default function CheckoutModal() {
   };
 
   const handlePlaceOrder = async () => {
+    if (submittingRef.current) return;
+    submittingRef.current = true;
+
     // Validate
     if (paymentTiming === "pay-now") {
       if (paymentType === "split") {
         if (splitPayments.length < 2) {
           toast.error("Please enter at least 2 split payments.");
+          submittingRef.current = false;
           return;
         }
         const sumOk = Math.abs(splitTotal - total) < 0.01;
@@ -144,37 +149,44 @@ export default function CheckoutModal() {
           toast.error(
             `Remaining split balance is $${splitRemaining.toFixed(2)}. Please pay the full amount before placing the order.`,
           );
+          submittingRef.current = false;
           return;
         }
       } else {
         if (paymentMethod === "cash" && cashGiven < total) {
           toast.error("Cash given is less than the total amount.");
+          submittingRef.current = false;
           return;
         }
       }
     }
     if (orderTiming === "later" && !scheduledAt) {
       toast.error("Please confirm the pickup schedule.");
+      submittingRef.current = false;
       return;
     }
 
-    const order = await placeOrder();
-    if (order) {
-      toast.success(
-        <div className="flex flex-col gap-0.5 text-left">
-          <span className="font-700 text-[11px] text-green-900">
-            Order Placed! 🎉
-          </span>
-          <span className="text-[10px] text-green-800">
-            {order.orderNumber} • {order.orderType.toUpperCase()}
-          </span>
-          <span className="font-600 text-[10px] text-green-950">
-            {order.paymentStatus === "unpaid"
-              ? "⏳ Payment Pending"
-              : `✓ Paid $${order.total.toFixed(2)}`}
-          </span>
-        </div>,
-      );
+    try {
+      const order = await placeOrder();
+      if (order) {
+        toast.success(
+          <div className="flex flex-col gap-0.5 text-left">
+            <span className="font-700 text-[11px] text-green-900">
+              Order Placed! 🎉
+            </span>
+            <span className="text-[10px] text-green-800">
+              {order.orderNumber} • {order.orderType.toUpperCase()}
+            </span>
+            <span className="font-600 text-[10px] text-green-950">
+              {order.paymentStatus === "unpaid"
+                ? "⏳ Payment Pending"
+                : `✓ Paid $${order.total.toFixed(2)}`}
+            </span>
+          </div>,
+        );
+      }
+    } finally {
+      submittingRef.current = false;
     }
   };
 

@@ -113,17 +113,19 @@ export default function CustomerModal({ isOpen, onClose }: Props) {
 
   const onSubmit = (data: FormValues) => {
     const customerName = `${data.firstName || ''} ${data.lastName || ''}`.trim();
-    if (!customerName || !data.phone) {
-      toast.error('Please fill in Name and Phone Number.');
+    if (!data.phone) {
+      toast.error('Please fill in Phone Number or Email Address.');
       return;
     }
+    const finalName = customerName || 'No Name';
     setCustomer({
-      name: customerName,
+      name: finalName,
       phone: data.phone,
+      email: data.email || undefined,
       address: data.address || undefined,
       postalCode: data.postalCode || undefined,
     });
-    toast.success(`Customer ${customerName} set for order.`);
+    toast.success(`Customer ${finalName} set for order.`);
     onClose();
   };
 
