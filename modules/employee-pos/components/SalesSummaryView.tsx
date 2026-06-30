@@ -183,14 +183,14 @@ export default function SalesSummaryView({ selectedDate }: SalesSummaryViewProps
         </div>
 
         <div className="flex items-center gap-2.5">
-          <button 
+          {/* <button 
             onClick={() => window.print()}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-neutral-250 bg-neutral-50 hover:bg-neutral-100 text-[12px] font-700 text-neutral-700 transition-all cursor-pointer shadow-2xs"
             title="Print Report"
           >
             <Printer size={14} className="text-neutral-600" />
             <span>Print Report</span>
-          </button>
+          </button> */}
 
           <button 
             onClick={() => fetchSummary()}
