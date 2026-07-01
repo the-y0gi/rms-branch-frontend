@@ -18,7 +18,8 @@ export default function ExpenseDashboardView() {
   const fetchExpenses = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await axios.get(process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/expenses", {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+      const res = await axios.get(`${apiUrl}/expenses`, {
         params: {
           date: selectedDate,
           employeeName: selectedEmployee || undefined,
