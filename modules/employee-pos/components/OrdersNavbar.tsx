@@ -90,9 +90,9 @@ export default function OrdersNavbar({ onToggleSidebar }: OrdersNavbarProps) {
         </button>
 
         {/* Settings */}
-        <button className="w-8 h-8 flex items-center justify-center rounded-lg bg-neutral-50 border border-neutral-200 text-neutral-500 hover:text-brand-primary hover:border-brand-primary/30 hover:bg-brand-primary-light transition-all cursor-pointer">
+        {/* <button className="w-8 h-8 flex items-center justify-center rounded-lg bg-neutral-50 border border-neutral-200 text-neutral-500 hover:text-brand-primary hover:border-brand-primary/30 hover:bg-brand-primary-light transition-all cursor-pointer">
           <Settings size={16} />
-        </button>
+        </button> */}
 
         {/* Divider */}
         <div className="h-7 w-px bg-neutral-200" />
