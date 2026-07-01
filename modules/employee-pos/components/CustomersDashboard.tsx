@@ -21,7 +21,7 @@ interface CustomerRecord {
 }
 
 export default function CustomersDashboard() {
-  const [orders, setOrders] = useState<any[]>([]);
+  const [customers, setCustomers] = useState<CustomerRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchKeyword, setSearchKeyword] = useState('');
   const [selectedDate, setSelectedDate] = useState(() => {
@@ -38,17 +38,17 @@ export default function CustomersDashboard() {
 
   const { setCustomer } = usePosStore();
 
-  // ── Fetch Orders from API ──
-  const fetchOrders = useCallback(async () => {
+  // ── Fetch Customers from API ──
+  const fetchCustomers = useCallback(async () => {
     setLoading(true);
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
-      const res = await axios.get(`${apiUrl}/orders`);
+      const res = await axios.get(`${apiUrl}/orders/customers`);
       if (res.data.success) {
-        setOrders(res.data.data);
+        setCustomers(res.data.data);
       }
     } catch (err) {
-      console.error('Failed to fetch orders:', err);
+      console.error('Failed to fetch customers:', err);
       toast.error('Could not load customer records from database.');
     } finally {
       setLoading(false);
@@ -56,8 +56,8 @@ export default function CustomersDashboard() {
   }, []);
 
   useEffect(() => {
-    fetchOrders();
-  }, [fetchOrders]);
+    fetchCustomers();
+  }, [fetchCustomers]);
 
   const getLocalDateStr = (dateInput: string | Date) => {
     try {
@@ -94,46 +94,7 @@ export default function CustomersDashboard() {
     }
   };
 
-  // ── Unique Customer Aggregation ──
-  const customersList = useMemo(() => {
-    const customersMap = new Map<string, CustomerRecord>();
-
-    orders.forEach((order: any) => {
-      if (order.customer) {
-        const phone = (order.customer.phone || '').trim();
-        const email = (order.customer.email || '').trim();
-
-        // Keep customers who provided EITHER email OR phone number
-        const hasPhone = phone && phone !== 'No phone';
-        const hasEmail = email && email !== 'No email';
-
-        if (hasPhone || hasEmail) {
-          const nameParts = (order.customer.name || '').trim().split(/\s+/);
-          const firstName = nameParts[0] || '';
-          const lastName = nameParts.slice(1).join(' ') || '';
-
-          const orderDate = new Date(order.createdAt);
-          const mapKey = hasPhone ? phone : email;
-          const existing = customersMap.get(mapKey);
-
-          if (!existing || new Date(existing.lastOrderDate) < orderDate) {
-            customersMap.set(mapKey, {
-              firstName,
-              lastName,
-              phone: hasPhone ? phone : '',
-              email: hasEmail ? email : '',
-              updatedDate: order.updatedAt || order.createdAt,
-              lastOrderDate: order.createdAt,
-              address: order.customer.address,
-              postalCode: order.customer.postalCode,
-            });
-          }
-        }
-      }
-    });
-
-    return Array.from(customersMap.values());
-  }, [orders]);
+  const customersList = customers;
 
   // ── Filtered Customers (Date and Keyword Search) ──
   const filteredCustomers = useMemo(() => {
@@ -461,7 +422,7 @@ export default function CustomersDashboard() {
         onClose={() => {
           setIsModalOpen(false);
           // Refresh list to show any edits
-          fetchOrders();
+          fetchCustomers();
         }}
       />
 

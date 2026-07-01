@@ -3,12 +3,17 @@
 import React, { useState, useEffect } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 import { ShoppingBag, DollarSign, UserCheck, Users } from 'lucide-react';
-import { Order } from '../types';
 
 interface DashboardViewProps {
-  allOrders: Order[];
-  selectedDate: string;
-  searchKeyword: string;
+  metrics: {
+    totalOrders: number;
+    totalEarnings: number;
+    newCustomers: number;
+    returningCustomers: number;
+    popularDaysData: Array<{ name: string; value: number }>;
+    popularFoodData: Array<{ name: string; value: number }>;
+  };
+  loading?: boolean;
 }
 
 const COLORS = [
@@ -23,111 +28,24 @@ const COLORS = [
   '#44403C'  // Stone Dark
 ];
 
-export default function DashboardView({ allOrders, selectedDate, searchKeyword }: DashboardViewProps) {
+export default function DashboardView({ metrics, loading }: DashboardViewProps) {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setMounted(false); // Reset on unmount
     setMounted(true);
   }, []);
 
-  const getLocalDateStr = (dateInput: string | Date) => {
-    const d = new Date(dateInput);
-    const localDate = new Date(d.getTime() - (d.getTimezoneOffset() * 60000));
-    return localDate.toISOString().slice(0, 10);
-  };
-
-  // ── Metrics Calculations
-  const metricsOrders = React.useMemo(() => {
-    return allOrders.filter(order => {
-      const orderDateStr = getLocalDateStr(order.createdAt);
-      if (orderDateStr !== selectedDate) return false;
-
-      const keyword = searchKeyword.toLowerCase().trim();
-      if (!keyword) return true;
-
-      const orderNo = order.orderNumber.toLowerCase();
-      const custName = order.customer?.name?.toLowerCase() || '';
-      const custPhone = order.customer?.phone || '';
-
-      return orderNo.includes(keyword) || custName.includes(keyword) || custPhone.includes(keyword);
-    });
-  }, [allOrders, selectedDate, searchKeyword]);
-
-  const totalOrders = metricsOrders.length;
-
-  const totalEarnings = metricsOrders.reduce((sum, order) => {
-    if (order.status !== 'cancelled') {
-      return sum + order.total;
-    }
-    return sum;
-  }, 0);
-
-  // New vs Returning Customer 
-  let newCustomers = 0;
-  let returningCustomers = 0;
-
-  metricsOrders.forEach(order => {
-    const phone = order.customer?.phone?.trim();
-    const email = order.customer?.email?.trim();
-    
-    // If order has no phone AND no email, ignore it completely for customer cards
-    if (!phone && !email) return;
-
-    // Find other orders for this customer in the 30-day history (allOrders)
-    const customerOrders = allOrders.filter(o => {
-      const oPhone = o.customer?.phone?.trim();
-      const oEmail = o.customer?.email?.trim();
-      
-      const phoneMatch = phone && oPhone && phone === oPhone;
-      const emailMatch = email && oEmail && email === oEmail;
-      
-      return phoneMatch || emailMatch;
-    });
-
-    const currentOrderTime = new Date(order.createdAt).getTime();
-    const hasPreviousOrder = customerOrders.some(o => new Date(o.createdAt).getTime() < currentOrderTime);
-
-    if (hasPreviousOrder) {
-      returningCustomers += 1;
-    } else {
-      newCustomers += 1;
-    }
-  });
-
-
-  // ── Chart 1: Most Popular Days 
-  const getDayName = (dateStr: string) => {
-    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-    return days[new Date(dateStr).getDay()];
-  };
-
-  const daysDataCounts: Record<string, number> = {
-    Monday: 0,
-    Tuesday: 0,
-    Wednesday: 0,
-    Thursday: 0,
-    Friday: 0,
-    Saturday: 0,
-    Sunday: 0
-  };
-
-  allOrders.forEach(order => {
-    if (order.status !== 'cancelled') {
-      const day = getDayName(order.createdAt);
-      if (day in daysDataCounts) {
-        daysDataCounts[day] += 1;
-      }
-    }
-  });
-
-  const popularDaysData = Object.entries(daysDataCounts).map(([name, value]) => ({
-    name,
-    value
-  })).filter(item => item.value > 0);
+  const {
+    totalOrders = 0,
+    totalEarnings = 0,
+    newCustomers = 0,
+    returningCustomers = 0,
+    popularDaysData = [],
+    popularFoodData = []
+  } = metrics || {};
 
   // Fallback default data if empty
-  const popularDaysChartData = popularDaysData.length > 0 ? popularDaysData : [
+  const popularDaysChartData = popularDaysData && popularDaysData.length > 0 ? popularDaysData : [
     { name: 'Monday', value: 0 },
     { name: 'Tuesday', value: 0 },
     { name: 'Wednesday', value: 0 },
@@ -137,36 +55,9 @@ export default function DashboardView({ allOrders, selectedDate, searchKeyword }
     { name: 'Sunday', value: 0 }
   ];
 
-  // ── Chart 2: Most Popular Food Category/Items 
-  const foodDataCounts: Record<string, number> = {};
-  allOrders.forEach(order => {
-    if (order.status !== 'cancelled') {
-      order.items.forEach(item => {
-        // Group by item name
-        const itemName = item.name;
-        foodDataCounts[itemName] = (foodDataCounts[itemName] || 0) + item.quantity;
-      });
-    }
-  });
-
-  const sortedFood = Object.entries(foodDataCounts)
-    .map(([name, value]) => ({ name, value }))
-    .sort((a, b) => b.value - a.value);
-
-  // Take top 6 and group others
-  let popularFoodChartData: Array<{ name: string; value: number }> = [];
-  if (sortedFood.length > 6) {
-    popularFoodChartData = sortedFood.slice(0, 6);
-    const otherVal = sortedFood.slice(6).reduce((sum, item) => sum + item.value, 0);
-    popularFoodChartData.push({ name: 'Other Items', value: otherVal });
-  } else {
-    popularFoodChartData = sortedFood;
-  }
-
-  if (popularFoodChartData.length === 0) {
-    popularFoodChartData = [{ name: 'No Menu Items Sold', value: 0 }];
-  }
-
+  const popularFoodChartData = popularFoodData && popularFoodData.length > 0 ? popularFoodData : [
+    { name: 'No Menu Items Sold', value: 0 }
+  ];
 
   if (!mounted) {
     return (
@@ -253,7 +144,7 @@ export default function DashboardView({ allOrders, selectedDate, searchKeyword }
             Most Popular Days (Last 30 Days)
           </h3>
           <div className="h-[280px] w-full flex items-center justify-center">
-            {popularDaysData.length > 0 ? (
+            {popularDaysData && popularDaysData.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
@@ -292,7 +183,7 @@ export default function DashboardView({ allOrders, selectedDate, searchKeyword }
             Most Popular Food (Last 30 Days)
           </h3>
           <div className="h-[280px] w-full flex items-center justify-center">
-            {sortedFood.length > 0 ? (
+            {popularFoodData && popularFoodData.length > 0 && popularFoodData[0].name !== 'No Menu Items Sold' ? (
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
@@ -320,7 +211,7 @@ export default function DashboardView({ allOrders, selectedDate, searchKeyword }
                 </PieChart>
               </ResponsiveContainer>
             ) : (
-              <div className="text-neutral-400 text-[11px] font-700">No items sold.</div>
+              <div className="text-neutral-405 text-[11px] font-700">No items sold.</div>
             )}
           </div>
         </div>

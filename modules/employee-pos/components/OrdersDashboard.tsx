@@ -1,21 +1,30 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect, useCallback } from 'react';
-import axios from 'axios';
-import OrdersNavbar from './OrdersNavbar';
-import DashboardView from './DashboardView';
-import SalesSummaryView from './SalesSummaryView';
-import ExpenseDashboardView from './ExpenseDashboardView';
-import POSSidebarDrawer from './POSSidebarDrawer';
-import OrdersTableView from './OrdersTableView';
-import OrderDetailModal from './OrderDetailModal';
-import { Order } from '../types';
-import { Search, Calendar, ChevronDown, SlidersHorizontal, RefreshCw, X } from 'lucide-react';
-import toast from 'react-hot-toast';
+import React, { useState, useEffect, useCallback } from "react";
+import axios from "axios";
+import OrdersNavbar from "./OrdersNavbar";
+import DashboardView from "./DashboardView";
+import SalesSummaryView from "./SalesSummaryView";
+import ExpenseDashboardView from "./ExpenseDashboardView";
+import POSSidebarDrawer from "./POSSidebarDrawer";
+import OrdersTableView from "./OrdersTableView";
+import OrderDetailModal from "./OrderDetailModal";
+import { Order } from "../types";
+import {
+  Search,
+  Calendar,
+  ChevronDown,
+  SlidersHorizontal,
+  RefreshCw,
+  X,
+} from "lucide-react";
+import toast from "react-hot-toast";
 
 export default function OrdersDashboard() {
   // ── Sub-tabs ──
-  const [activeSubTab, setActiveSubTab] = useState<'dashboard' | 'orders' | 'sales_summary' | 'expense_payout'>('dashboard');
+  const [activeSubTab, setActiveSubTab] = useState<
+    "dashboard" | "orders" | "sales_summary" | "expense_payout"
+  >("dashboard");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isReady, setIsReady] = useState(false);
 
@@ -25,10 +34,10 @@ export default function OrdersDashboard() {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
 
   // ── Filters State ──
-  const [searchKeyword, setSearchKeyword] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
-  const [paymentFilter, setPaymentFilter] = useState('');
-  
+  const [searchKeyword, setSearchKeyword] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+  const [paymentFilter, setPaymentFilter] = useState("");
+
   // Date states (Default: Last 30 Days)
   const getPastDateStr = (daysAgo: number) => {
     const d = new Date();
@@ -46,9 +55,19 @@ export default function OrdersDashboard() {
 
   const [startDate, setStartDate] = useState(getPastDateStr(30));
   const [endDate, setEndDate] = useState(getTodayDateStr());
-  
+
   // Standard single date input (synced with endDate)
   const [singleDate, setSingleDate] = useState(getTodayDateStr());
+
+  // Dashboard pre-aggregated metrics state
+  const [dashboardMetrics, setDashboardMetrics] = useState<{
+    totalOrders: number;
+    totalEarnings: number;
+    newCustomers: number;
+    returningCustomers: number;
+    popularDaysData: Array<{ name: string; value: number }>;
+    popularFoodData: Array<{ name: string; value: number }>;
+  } | null>(null);
 
   // ── Advance Search Modal State ──
   const [isAdvanceSearchOpen, setIsAdvanceSearchOpen] = useState(false);
@@ -60,48 +79,59 @@ export default function OrdersDashboard() {
     if (!isReady) return;
     setLoading(true);
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
-      
-      let finalStartDate = startDate;
-      let finalEndDate = endDate;
+      const apiUrl =
+        process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
 
-      // Force 30-day window ending on TODAY'S actual date for dashboard tab
-      if (activeSubTab === 'dashboard') {
-        finalEndDate = getTodayDateStr();
-        finalStartDate = getPastDateStr(30);
-      }
-
-      const res = await axios.get(`${apiUrl}/orders`, {
-        params: {
-          startDate: finalStartDate,
-          endDate: finalEndDate,
-          status: activeSubTab === 'orders' ? (statusFilter || undefined) : undefined,
-          paymentStatus: activeSubTab === 'orders' ? (paymentFilter || undefined) : undefined,
+      if (activeSubTab === "dashboard") {
+        const res = await axios.get(`${apiUrl}/orders/dashboard-metrics`, {
+          params: { date: singleDate },
+        });
+        if (res.data.success) {
+          setDashboardMetrics(res.data.data);
         }
-      });
-
-      if (res.data.success) {
-        setOrders(res.data.data);
+      } else if (activeSubTab === "orders") {
+        const res = await axios.get(`${apiUrl}/orders`, {
+          params: {
+            startDate: startDate,
+            endDate: endDate,
+            status: statusFilter || undefined,
+            paymentStatus: paymentFilter || undefined,
+          },
+        });
+        if (res.data.success) {
+          setOrders(res.data.data);
+        }
       }
     } catch (err) {
-      console.error('Failed to fetch orders:', err);
-      toast.error('Could not load orders from database.');
+      console.error("Failed to fetch dashboard data:", err);
+      toast.error("Could not load dashboard data from database.");
     } finally {
       setLoading(false);
     }
-  }, [isReady, activeSubTab, startDate, endDate, singleDate, statusFilter, paymentFilter]);
+  }, [
+    isReady,
+    activeSubTab,
+    startDate,
+    endDate,
+    singleDate,
+    statusFilter,
+    paymentFilter,
+  ]);
 
   // ── Parse Tab Query Param On Mount ──
   useEffect(() => {
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search);
-      const tab = params.get('tab');
-      if (tab && ['dashboard', 'orders', 'sales_summary', 'expense_payout'].includes(tab)) {
+      const tab = params.get("tab");
+      if (
+        tab &&
+        ["dashboard", "orders", "sales_summary", "expense_payout"].includes(tab)
+      ) {
         setActiveSubTab(tab as any);
-        if (tab === 'dashboard') {
+        if (tab === "dashboard") {
           setStartDate(getPastDateStr(30));
           setEndDate(getTodayDateStr());
-        } else if (tab === 'orders') {
+        } else if (tab === "orders") {
           setStartDate(getTodayDateStr());
           setEndDate(getTodayDateStr());
           setSingleDate(getTodayDateStr());
@@ -113,11 +143,11 @@ export default function OrdersDashboard() {
 
   // ── Sync Active Tab to URL ──
   useEffect(() => {
-    if (isReady && typeof window !== 'undefined') {
+    if (isReady && typeof window !== "undefined") {
       const url = new URL(window.location.href);
-      if (url.searchParams.get('tab') !== activeSubTab) {
-        url.searchParams.set('tab', activeSubTab);
-        window.history.pushState({}, '', url.pathname + url.search);
+      if (url.searchParams.get("tab") !== activeSubTab) {
+        url.searchParams.set("tab", activeSubTab);
+        window.history.pushState({}, "", url.pathname + url.search);
       }
     }
   }, [activeSubTab, isReady]);
@@ -130,32 +160,33 @@ export default function OrdersDashboard() {
   // ── Sync singleDate to startDate/endDate range ──
   const handleSingleDateChange = (val: string) => {
     setSingleDate(val);
-    if (activeSubTab === 'orders') {
+    if (activeSubTab === "orders") {
       setStartDate(val);
       setEndDate(val);
     }
   };
 
-
   // ── Apply Quick Date Ranges (Advance Search) ──
-  const handleQuickRange = (range: 'today' | 'this_week' | 'last_week' | 'this_month' | 'last_month') => {
+  const handleQuickRange = (
+    range: "today" | "this_week" | "last_week" | "this_month" | "last_month",
+  ) => {
     const today = new Date();
     let start = new Date();
     let end = new Date();
 
     switch (range) {
-      case 'today':
+      case "today":
         start = today;
         end = today;
         break;
-      case 'this_week':
+      case "this_week":
         // Current week (Monday to Sunday)
         const dayOfWeek = today.getDay();
         const diff = today.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1); // adjust when day is sunday
         start = new Date(today.setDate(diff));
         end = new Date();
         break;
-      case 'last_week':
+      case "last_week":
         const lastWeekStart = new Date();
         lastWeekStart.setDate(today.getDate() - today.getDay() - 6);
         const lastWeekEnd = new Date();
@@ -163,11 +194,11 @@ export default function OrdersDashboard() {
         start = lastWeekStart;
         end = lastWeekEnd;
         break;
-      case 'this_month':
+      case "this_month":
         start = new Date(today.getFullYear(), today.getMonth(), 1);
         end = new Date();
         break;
-      case 'last_month':
+      case "last_month":
         start = new Date(today.getFullYear(), today.getMonth() - 1, 1);
         end = new Date(today.getFullYear(), today.getMonth(), 0);
         break;
@@ -178,18 +209,19 @@ export default function OrdersDashboard() {
   };
 
   const handleSelectOrder = async (order: Order) => {
-    const toastId = toast.loading('Loading order details...');
+    const toastId = toast.loading("Loading order details...");
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+      const apiUrl =
+        process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
       const res = await axios.get(`${apiUrl}/orders/${order._id}`);
       if (res.data.success) {
         setSelectedOrder(res.data.data);
       } else {
-        toast.error('Failed to load order details');
+        toast.error("Failed to load order details");
       }
     } catch (err) {
-      console.error('Error fetching order details:', err);
-      toast.error('Failed to load order details');
+      console.error("Error fetching order details:", err);
+      toast.error("Failed to load order details");
     } finally {
       toast.dismiss(toastId);
     }
@@ -212,94 +244,102 @@ export default function OrdersDashboard() {
     setEndDate(defaultEnd);
     setSingleDate(defaultEnd);
     setIsAdvanceSearchOpen(false);
-    toast.success('Filters reset to default last 30 days');
+    toast.success("Filters reset to default last 30 days");
   };
 
   const handleClearFilters = () => {
-    setSearchKeyword('');
-    setStatusFilter('');
-    setPaymentFilter('');
+    setSearchKeyword("");
+    setStatusFilter("");
+    setPaymentFilter("");
     const today = getTodayDateStr();
     setSingleDate(today);
-    
-    if (activeSubTab === 'dashboard') {
+
+    if (activeSubTab === "dashboard") {
       setStartDate(getPastDateStr(30));
       setEndDate(today);
     } else {
       setStartDate(today);
       setEndDate(today);
     }
-    toast.success('Filters cleared successfully');
+    toast.success("Filters cleared successfully");
   };
 
   // ── Client-side Text Filter (Instant Search) ──
   const filteredOrders = React.useMemo(() => {
-    return orders.filter(order => {
+    return orders.filter((order) => {
       const keyword = searchKeyword.toLowerCase().trim();
       if (!keyword) return true;
 
       const orderNo = order.orderNumber.toLowerCase();
-      const custName = order.customer?.name?.toLowerCase() || '';
-      const custPhone = order.customer?.phone || '';
+      const custName = order.customer?.name?.toLowerCase() || "";
+      const custPhone = order.customer?.phone || "";
 
-      return orderNo.includes(keyword) || custName.includes(keyword) || custPhone.includes(keyword);
+      return (
+        orderNo.includes(keyword) ||
+        custName.includes(keyword) ||
+        custPhone.includes(keyword)
+      );
     });
   }, [orders, searchKeyword]);
 
   return (
     <main className="h-screen flex flex-col overflow-hidden bg-brand-bg text-neutral-900 font-sans">
-      
       {/* Navbar Header */}
       <OrdersNavbar onToggleSidebar={() => setIsSidebarOpen(true)} />
 
       {/* ── Secondary Control Bar (Dashboard / Orders / Sales tabs + Filters) ── */}
       <div className="bg-white border-b border-neutral-200 px-6 py-3.5 flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4 shadow-sm flex-shrink-0 select-none">
-        
         {/* Left Side: Sub-tabs and Main Header Text */}
         <div className="flex items-center gap-4 flex-wrap">
           <h1 className="text-xl font-900 text-neutral-900 tracking-tight leading-none min-w-[140px]">
-            {activeSubTab === 'dashboard' ? 'Dashboard' : activeSubTab === 'orders' ? 'Orders' : activeSubTab === 'sales_summary' ? 'Sales Summary' : 'Expense/Payout'}
+            {activeSubTab === "dashboard"
+              ? "Dashboard"
+              : activeSubTab === "orders"
+                ? "Orders"
+                : activeSubTab === "sales_summary"
+                  ? "Sales Summary"
+                  : "Expense/Payout"}
           </h1>
-          
+
           <div className="flex items-center gap-1 bg-neutral-100 p-1 rounded-xl border border-neutral-200">
             <button
               onClick={() => {
-                setActiveSubTab('dashboard');
+                setActiveSubTab("dashboard");
                 // Sync range to last 30 days relative to today's actual date
                 setStartDate(getPastDateStr(30));
                 setEndDate(getTodayDateStr());
               }}
               className={`px-4 py-1.5 rounded-lg text-[11px] font-800 tracking-wide uppercase transition-all duration-150 cursor-pointer ${
-                activeSubTab === 'dashboard'
-                  ? 'bg-brand-primary text-white shadow-sm'
-                  : 'text-neutral-500 hover:text-brand-primary'
+                activeSubTab === "dashboard"
+                  ? "bg-brand-primary text-white shadow-sm"
+                  : "text-neutral-500 hover:text-brand-primary"
               }`}
             >
               Dashboard
             </button>
             <button
               onClick={() => {
-                setActiveSubTab('orders');
+                setActiveSubTab("orders");
                 // Sync range to selected singleDate
                 setStartDate(singleDate);
                 setEndDate(singleDate);
               }}
               className={`px-4 py-1.5 rounded-lg text-[11px] font-800 tracking-wide uppercase transition-all duration-150 cursor-pointer ${
-                activeSubTab === 'orders'
-                  ? 'bg-brand-primary text-white shadow-sm'
-                  : 'text-neutral-500 hover:text-brand-primary'
+                activeSubTab === "orders"
+                  ? "bg-brand-primary text-white shadow-sm"
+                  : "text-neutral-500 hover:text-brand-primary"
               }`}
             >
               Orders
             </button>
             <button
               onClick={() => {
-                setActiveSubTab('sales_summary');
+                setActiveSubTab("sales_summary");
               }}
               className={`px-4 py-1.5 rounded-lg text-[11px] font-800 tracking-wide uppercase transition-all duration-150 cursor-pointer ${
-                activeSubTab === 'sales_summary'
-                  ? 'bg-brand-primary text-white shadow-sm'
-                  : 'text-neutral-500 hover:text-brand-primary'
+                activeSubTab === "sales_summary"
+                  ? "bg-brand-primary text-white shadow-sm"
+                  : "text-neutral-500 hover:text-brand-primary"
               }`}
             >
               Sales Summary
@@ -309,10 +349,12 @@ export default function OrdersDashboard() {
 
         {/* Right Side: Filters (Keyword, Status, Payment, Date, More Search) */}
         <div className="flex flex-wrap items-center gap-3">
-          
           {/* Date Picker Input */}
           <div className="relative">
-            <Calendar size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" />
+            <Calendar
+              size={14}
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400"
+            />
             <input
               type="date"
               value={singleDate}
@@ -323,7 +365,10 @@ export default function OrdersDashboard() {
 
           {/* Keyword Search Input */}
           <div className="relative w-[180px] sm:w-[220px]">
-            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" />
+            <Search
+              size={14}
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400"
+            />
             <input
               type="text"
               value={searchKeyword}
@@ -333,7 +378,7 @@ export default function OrdersDashboard() {
             />
             {searchKeyword && (
               <button
-                onClick={() => setSearchKeyword('')}
+                onClick={() => setSearchKeyword("")}
                 className="absolute right-2.5 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600"
               >
                 <X size={11} />
@@ -342,7 +387,7 @@ export default function OrdersDashboard() {
           </div>
 
           {/* Order Status Select */}
-          {activeSubTab === 'orders' && (
+          {activeSubTab === "orders" && (
             <div className="relative">
               <select
                 value={statusFilter}
@@ -356,12 +401,15 @@ export default function OrdersDashboard() {
                 <option value="completed">Order Completed</option>
                 <option value="cancelled">Cancelled</option>
               </select>
-              <ChevronDown size={13} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-neutral-400 pointer-events-none" />
+              <ChevronDown
+                size={13}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-neutral-400 pointer-events-none"
+              />
             </div>
           )}
 
           {/* Payment Method Select */}
-          {activeSubTab === 'orders' && (
+          {activeSubTab === "orders" && (
             <div className="relative">
               <select
                 value={paymentFilter}
@@ -372,12 +420,15 @@ export default function OrdersDashboard() {
                 <option value="paid">Paid</option>
                 <option value="unpaid">Unpaid</option>
               </select>
-              <ChevronDown size={13} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-neutral-400 pointer-events-none" />
+              <ChevronDown
+                size={13}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-neutral-400 pointer-events-none"
+              />
             </div>
           )}
 
           {/* Advance Search Button */}
-          {activeSubTab === 'orders' && (
+          {activeSubTab === "orders" && (
             <button
               onClick={() => setIsAdvanceSearchOpen(true)}
               className="flex items-center gap-1.5 px-3 py-1.5 border border-neutral-200 rounded-lg bg-neutral-50 hover:bg-neutral-100 text-[12px] font-600 text-neutral-700 hover:text-brand-primary transition-all cursor-pointer shadow-2xs"
@@ -396,11 +447,11 @@ export default function OrdersDashboard() {
           </button>
 
           {/* Manual Refresh Trigger */}
-          {activeSubTab === 'orders' && (
+          {activeSubTab === "orders" && (
             <button
               onClick={fetchOrders}
               className={`p-1.5 rounded-lg border border-neutral-200 bg-neutral-50 hover:bg-neutral-100 text-neutral-500 hover:text-brand-primary transition-all cursor-pointer ${
-                loading ? 'animate-spin' : ''
+                loading ? "animate-spin" : ""
               }`}
               title="Refresh list"
             >
@@ -408,35 +459,41 @@ export default function OrdersDashboard() {
             </button>
           )}
         </div>
-
       </div>
 
       {/* ── Main View Container ── */}
       <div className="flex-1 overflow-hidden p-6 bg-brand-bg flex flex-col min-h-0">
-        
-        {loading && orders.length === 0 ? (
+        {loading && (activeSubTab === "dashboard" ? !dashboardMetrics : orders.length === 0) ? (
           <div className="flex-1 flex flex-col items-center justify-center text-neutral-400 font-750 text-[12px] gap-2">
             <span className="animate-spin text-xl">⏳</span>
-            <span>Fetching updated order records...</span>
+            <span>Fetching updated dashboard records...</span>
           </div>
         ) : (
           <>
-            {activeSubTab === 'dashboard' ? (
+            {activeSubTab === "dashboard" ? (
               <DashboardView
-                allOrders={orders}
-                selectedDate={singleDate}
-                searchKeyword={searchKeyword}
+                metrics={dashboardMetrics || {
+                  totalOrders: 0,
+                  totalEarnings: 0,
+                  newCustomers: 0,
+                  returningCustomers: 0,
+                  popularDaysData: [],
+                  popularFoodData: []
+                }}
+                loading={loading}
               />
-            ) : activeSubTab === 'sales_summary' ? (
+            ) : activeSubTab === "sales_summary" ? (
               <SalesSummaryView selectedDate={singleDate} />
-            ) : activeSubTab === 'expense_payout' ? (
+            ) : activeSubTab === "expense_payout" ? (
               <ExpenseDashboardView />
             ) : (
-              <OrdersTableView orders={filteredOrders} onSelectOrder={handleSelectOrder} />
+              <OrdersTableView
+                orders={filteredOrders}
+                onSelectOrder={handleSelectOrder}
+              />
             )}
           </>
         )}
-
       </div>
 
       {/* Sidebar Drawer Component */}
@@ -445,10 +502,17 @@ export default function OrdersDashboard() {
         onClose={() => setIsSidebarOpen(false)}
         activeTab={activeSubTab}
         onSelectTab={(tabKey) => {
-          if (tabKey === 'dashboard' || tabKey === 'orders' || tabKey === 'sales_summary' || tabKey === 'expense_payout') {
+          if (
+            tabKey === "dashboard" ||
+            tabKey === "orders" ||
+            tabKey === "sales_summary" ||
+            tabKey === "expense_payout"
+          ) {
             setActiveSubTab(tabKey as any);
           } else {
-            toast.success(`Navigating to ${tabKey.replace('_', ' ').toUpperCase()}`);
+            toast.success(
+              `Navigating to ${tabKey.replace("_", " ").toUpperCase()}`,
+            );
           }
         }}
       />
@@ -462,7 +526,9 @@ export default function OrdersDashboard() {
           >
             {/* Modal Header */}
             <div className="bg-amber-500 text-white px-5 py-3.5 flex items-center justify-between">
-              <h3 className="font-800 text-[13px] uppercase tracking-wide">Advance Search</h3>
+              <h3 className="font-800 text-[13px] uppercase tracking-wide">
+                Advance Search
+              </h3>
               <button
                 type="button"
                 onClick={() => setIsAdvanceSearchOpen(false)}
@@ -474,17 +540,18 @@ export default function OrdersDashboard() {
 
             {/* Modal Body */}
             <div className="p-5 space-y-4">
-              
               {/* Quick Ranges */}
               <div className="space-y-1.5">
-                <label className="text-[10px] text-neutral-450 font-800 tracking-wider uppercase block">Quick Ranges</label>
+                <label className="text-[10px] text-neutral-450 font-800 tracking-wider uppercase block">
+                  Quick Ranges
+                </label>
                 <div className="flex flex-wrap gap-2">
                   {[
-                    { id: 'today', label: 'Today' },
-                    { id: 'this_week', label: 'This Week' },
-                    { id: 'last_week', label: 'Last Week' },
-                    { id: 'this_month', label: 'This Month' },
-                    { id: 'last_month', label: 'Last Month' },
+                    { id: "today", label: "Today" },
+                    { id: "this_week", label: "This Week" },
+                    { id: "last_week", label: "Last Week" },
+                    { id: "this_month", label: "This Month" },
+                    { id: "last_month", label: "Last Month" },
                   ].map((btn) => (
                     <button
                       key={btn.id}
@@ -501,7 +568,9 @@ export default function OrdersDashboard() {
               {/* Start and End Date selection */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <label className="text-[10.5px] text-neutral-500 font-700">Start Date</label>
+                  <label className="text-[10.5px] text-neutral-500 font-700">
+                    Start Date
+                  </label>
                   <input
                     type="date"
                     required
@@ -511,7 +580,9 @@ export default function OrdersDashboard() {
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[10.5px] text-neutral-500 font-700">End Date</label>
+                  <label className="text-[10.5px] text-neutral-500 font-700">
+                    End Date
+                  </label>
                   <input
                     type="date"
                     required
@@ -521,7 +592,6 @@ export default function OrdersDashboard() {
                   />
                 </div>
               </div>
-
             </div>
 
             {/* Modal Actions */}
@@ -540,7 +610,6 @@ export default function OrdersDashboard() {
                 Reset
               </button>
             </div>
-
           </form>
         </div>
       )}
@@ -551,7 +620,6 @@ export default function OrdersDashboard() {
         onClose={() => setSelectedOrder(null)}
         onRefresh={fetchOrders}
       />
-
     </main>
   );
 }

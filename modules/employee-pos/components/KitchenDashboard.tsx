@@ -25,7 +25,11 @@ export default function KitchenDashboard() {
   const fetchOrders = useCallback(async () => {
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
-      const res = await axios.get(`${apiUrl}/orders`);
+      const res = await axios.get(`${apiUrl}/orders`, {
+        params: {
+          status: 'pending,preparing,ready'
+        }
+      });
       if (res.data.success) {
         // Only keep active kitchen orders (pending, preparing, ready)
         // and exclude future scheduled orders (orders scheduled for a day after today)
